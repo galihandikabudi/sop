@@ -1,37 +1,37 @@
-// POST /api/sop/:id/reject  { note } — Kepala Sekolah only; sends SOP back to draft
+// POST /api/sop/:id/waka-approve — Waka bidang approves, forwarding to Kepala Sekolah
 import { getSessionUser, json, unauthorized, forbidden } from "../../../../lib/auth.js";
 import { logActivity } from "../../../../lib/log.js";
 
 export async function onRequestPost({ request, env, params }) {
   const user = await getSessionUser(request, env);
   if (!user) return unauthorized();
-  if (user.role !== "kepala_sekolah") return forbidden("Hanya Kepala Sekolah yang dapat menolak SOP.");
+  if (user.role !== "waka") return forbidden("Hanya Waka bidang yang dapat meninjau di tahap ini.");
 
   const sop = await env.DB.prepare("SELECT * FROM sop WHERE id = ?").bind(params.id).first();
   if (!sop) return json({ error: "SOP tidak ditemukan." }, 404);
-  if (sop.status !== "menunggu_persetujuan") {
-    return json({ error: "SOP ini tidak sedang menunggu persetujuan." }, 400);
+  if (sop.bidang !== user.bidang) return forbidden("SOP ini bukan dari bidang Anda.");
+  if (sop.status !== "menunggu_review") {
+    return json({ error: "SOP ini tidak sedang menunggu review Waka." }, 400);
   }
 
   const { note } = await request.json().catch(() => ({}));
-  if (!note) return json({ error: "Catatan alasan penolakan wajib diisi." }, 400);
 
   await env.DB.prepare(
-    "UPDATE sop SET status = 'draft', updated_at = datetime('now') WHERE id = ?"
+    "UPDATE sop SET status = 'menunggu_persetujuan', updated_at = datetime('now') WHERE id = ?"
   ).bind(sop.id).run();
 
   await env.DB.prepare(
     `INSERT INTO sop_versions (sop_id, version, content, status, note, actor_id)
-     VALUES (?, ?, ?, 'ditolak', ?, ?)`
-  ).bind(sop.id, sop.version, sop.content, note, user.id).run();
+     VALUES (?, ?, ?, 'menunggu_persetujuan', ?, ?)`
+  ).bind(sop.id, sop.version, sop.content, note || "Disetujui Waka, diteruskan ke Kepala Sekolah", user.id).run();
 
   await logActivity(env, {
     actorId: user.id,
     actorName: user.name,
-    action: "reject",
+    action: "waka_approve",
     entityType: "sop",
     entityId: sop.id,
-    detail: `Menolak "${sop.title}": ${note}`,
+    detail: `Menyetujui "${sop.title}" di tahap Waka, diteruskan ke Kepala Sekolah`,
   });
 
   return json({ ok: true });

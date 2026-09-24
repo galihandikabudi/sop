@@ -27,7 +27,14 @@
       </div>
 
       <form id="form" class="card" style="display:flex;flex-direction:column;gap:14px">
-        <div style="font-weight:700;font-size:15px">Tambah Akun Staf</div>
+        <div style="font-weight:700;font-size:15px">Tambah Akun</div>
+        <div class="field">
+          <label for="role">Peran</label>
+          <select id="role" required>
+            <option value="staff">Staf (mengajukan &amp; membaca SOP)</option>
+            <option value="waka">Waka Bidang (meninjau sebelum ke Kepala Sekolah)</option>
+          </select>
+        </div>
         <div class="field">
           <label for="name">Nama</label>
           <input id="name" required>

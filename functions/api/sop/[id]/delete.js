@@ -3,6 +3,7 @@
 // own SOPs while still in draft (once submitted/approved, deleting is
 // restricted to Kepala Sekolah to preserve the approval trail).
 import { getSessionUser, json, unauthorized, forbidden } from "../../../../lib/auth.js";
+import { logActivity } from "../../../../lib/log.js";
 
 export async function onRequestPost({ request, env, params }) {
   const user = await getSessionUser(request, env);
@@ -21,8 +22,18 @@ export async function onRequestPost({ request, env, params }) {
   await env.DB.batch([
     env.DB.prepare("DELETE FROM read_confirmations WHERE sop_id = ?").bind(sop.id),
     env.DB.prepare("DELETE FROM sop_versions WHERE sop_id = ?").bind(sop.id),
+    env.DB.prepare("DELETE FROM sop_comments WHERE sop_id = ?").bind(sop.id),
     env.DB.prepare("DELETE FROM sop WHERE id = ?").bind(sop.id),
   ]);
+
+  await logActivity(env, {
+    actorId: user.id,
+    actorName: user.name,
+    action: "delete",
+    entityType: "sop",
+    entityId: sop.id,
+    detail: `Menghapus "${sop.title}" (${sop.bidang}, status sebelumnya: ${sop.status})`,
+  });
 
   return json({ ok: true });
 }

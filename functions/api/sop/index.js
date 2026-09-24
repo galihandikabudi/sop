@@ -1,6 +1,7 @@
 // GET  /api/sop?status=&bidang=&q=   — list SOPs, newest first
 // POST /api/sop   { title, bidang, content } — create a new draft
 import { getSessionUser, json, unauthorized } from "../../../lib/auth.js";
+import { logActivity } from "../../../lib/log.js";
 
 export async function onRequestGet({ request, env }) {
   const user = await getSessionUser(request, env);
@@ -60,6 +61,15 @@ export async function onRequestPost({ request, env }) {
     `INSERT INTO sop_versions (sop_id, version, content, status, note, actor_id)
      VALUES (?, '1.0', ?, 'draft', 'Dibuat', ?)`
   ).bind(sopId, content || "", user.id).run();
+
+  await logActivity(env, {
+    actorId: user.id,
+    actorName: user.name,
+    action: "create",
+    entityType: "sop",
+    entityId: sopId,
+    detail: `Membuat draf "${title}" (${effectiveBidang})`,
+  });
 
   return json({ id: sopId }, 201);
 }

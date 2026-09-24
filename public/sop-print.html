@@ -16,11 +16,36 @@
     max-width: 210mm; min-height: 297mm; margin: 0 auto 40px; background: #fff;
     box-shadow: 0 2px 16px rgba(0,0,0,.15); padding: 18mm 16mm; box-sizing: border-box;
   }
-  .doc-header-table { width: 100%; border-collapse: collapse; margin-bottom: 22px; }
-  .doc-header-table td { border: 1px solid #1C2321; padding: 8px 12px; font-size: 12px; vertical-align: middle; }
-  .doc-header-table .school-cell { width: 55%; }
-  .doc-header-table .meta-cell { width: 45%; }
-  .doc-title { font-family: 'Source Serif 4', Georgia, serif; font-size: 15px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: .02em; }
+
+  /* Header built from bordered divs instead of a <table> — avoids
+     browsers dropping hairline borders around rowspan cells when printed. */
+  .doc-header {
+    display: flex; border: 1.4px solid #1C2321; margin-bottom: 22px;
+  }
+  .doc-header-left {
+    width: 48%; padding: 16px 18px; border-right: 1.4px solid #1C2321;
+    display: flex; flex-direction: column; justify-content: center; text-align: center;
+  }
+  .doc-school-name { font-weight: 700; font-size: 14px; letter-spacing: .01em; }
+  .doc-school-sub { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+  .doc-title {
+    font-family: 'Source Serif 4', Georgia, serif; font-size: 13.5px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .02em; margin-top: 12px;
+  }
+  .doc-header-right { width: 45%; display: flex; flex-direction: column; }
+  .doc-meta-row {
+    flex: 1; padding: 8px 14px; font-size: 12px; display: flex; align-items: center;
+    border-bottom: 1.4px solid #1C2321;
+  }
+  .doc-meta-row:last-child { border-bottom: none; }
+  .doc-header-qr {
+    width: 100px; flex-shrink: 0; border-left: 1.4px solid #1C2321;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 8px; gap: 4px; text-align: center;
+  }
+  .doc-header-qr img { width: 76px; height: 76px; display: block; }
+  .doc-header-qr .qr-caption { font-size: 8.5px; color: var(--muted); line-height: 1.3; }
+
   .sop-title-line { font-family: 'Source Serif 4', Georgia, serif; font-size: 20px; font-weight: 600; text-align: center; margin: 18px 0 26px; }
   .sign-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 56px; }
   .sign-box { text-align: center; font-size: 12.5px; }
@@ -38,7 +63,7 @@
 </head>
 <body>
 <div class="print-toolbar no-print">
-  <a href="#" onclick="history.back();return false;" class="btn btn-secondary">← Kembali</a>
+  <a id="back-link" href="/sop-list.html" class="btn btn-secondary">← Kembali</a>
   <button onclick="window.print()" class="btn btn-primary">Cetak / Simpan sebagai PDF</button>
 </div>
 
@@ -50,6 +75,8 @@
 (async function () {
   const id = new URLSearchParams(window.location.search).get("id");
   const sheet = document.getElementById("sheet");
+  const backLink = document.getElementById("back-link");
+  backLink.href = id ? `/sop-detail.html?id=${id}` : "/sop-list.html";
 
   try {
     await api("/auth/me");
@@ -68,21 +95,28 @@
 
   const year = sop.created_at ? new Date(sop.created_at).getFullYear() : new Date().getFullYear();
   const docNumber = `SOP/${String(sop.id).padStart(4, "0")}/SMK-MUHADA/${year}`;
+  const onlineUrl = `${window.location.origin}/sop-detail.html?id=${sop.id}`;
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=0&data=${encodeURIComponent(onlineUrl)}`;
 
   sheet.innerHTML = `
-    <table class="doc-header-table">
-      <tr>
-        <td class="school-cell" rowspan="4">
-          <div style="font-weight:700;font-size:14px">SMK MUHAMMADIYAH TODANAN</div>
-          <div style="font-size:11.5px;color:var(--muted);margin-top:2px">Majelis Dikdasmen PCM Todanan — Todanan, Blora, Jawa Tengah</div>
-          <div class="doc-title" style="margin-top:10px">Dokumen Mutu — Standar Operasional Prosedur</div>
-        </td>
-        <td class="meta-cell">No. Dokumen: ${docNumber}</td>
-      </tr>
-      <tr><td class="meta-cell">Bidang: ${sop.bidang}</td></tr>
-      <tr><td class="meta-cell">Revisi / Versi: ${sop.version}</td></tr>
-      <tr><td class="meta-cell">Tanggal Berlaku: ${sop.valid_until ? fmtDate(sop.valid_until) : "—"}</td></tr>
-    </table>
+    <div class="doc-header">
+      <div class="doc-header-left">
+        <div class="doc-school-name">SMK MUHAMMADIYAH TODANAN</div>
+        <div class="doc-school-sub">Majelis Dikdasmen PNF PDM Kabupaten Blora</div>
+        <div class="doc-title">Dokumen Mutu — Standar Operasional Prosedur</div>
+      </div>
+      <div class="doc-header-right">
+        <div class="doc-meta-row">No. Dokumen: ${docNumber}</div>
+        <div class="doc-meta-row">Bidang: ${sop.bidang}</div>
+        <div class="doc-meta-row">Revisi / Versi: ${sop.version}</div>
+        <div class="doc-meta-row">Tanggal Berlaku: ${sop.valid_until ? fmtDate(sop.valid_until) : "—"}</div>
+      </div>
+      <div class="doc-header-qr">
+        <img id="qr-img" src="${qrSrc}" alt="QR versi online">
+        <div class="qr-caption" id="qr-fallback" style="display:none;word-break:break-all">${onlineUrl}</div>
+        <div class="qr-caption" id="qr-caption-text">Pindai untuk versi online</div>
+      </div>
+    </div>
 
     <div class="sop-title-line">${sop.title}</div>
 
@@ -106,6 +140,13 @@
       </div>
     </div>
   `;
+
+  const qrImg = document.getElementById("qr-img");
+  qrImg.addEventListener("error", () => {
+    qrImg.style.display = "none";
+    document.getElementById("qr-caption-text").style.display = "none";
+    document.getElementById("qr-fallback").style.display = "block";
+  });
 })();
 </script>
 </body>

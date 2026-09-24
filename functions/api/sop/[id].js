@@ -1,6 +1,7 @@
 // GET /api/sop/:id — full detail incl. version history and read status
 // PUT /api/sop/:id  { title, content } — edit a draft (author only)
 import { getSessionUser, json, unauthorized, forbidden } from "../../../lib/auth.js";
+import { logActivity } from "../../../lib/log.js";
 
 async function loadSop(env, id) {
   return env.DB.prepare(
@@ -46,6 +47,15 @@ export async function onRequestPut({ request, env, params }) {
   await env.DB.prepare(
     "UPDATE sop SET title = COALESCE(?, title), content = COALESCE(?, content), updated_at = datetime('now') WHERE id = ?"
   ).bind(title || null, content || null, sop.id).run();
+
+  await logActivity(env, {
+    actorId: user.id,
+    actorName: user.name,
+    action: "update",
+    entityType: "sop",
+    entityId: sop.id,
+    detail: `Mengubah draf "${title || sop.title}"`,
+  });
 
   return json({ ok: true });
 }

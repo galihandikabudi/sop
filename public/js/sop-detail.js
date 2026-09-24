@@ -50,6 +50,15 @@
         </div>` : ""}
 
         <div class="card" id="body-card"></div>
+
+        <div class="card" id="comments-card">
+          <div style="font-weight:700;font-size:13.5px;margin-bottom:12px">Diskusi / Komentar</div>
+          <div id="comments-list" style="display:flex;flex-direction:column;margin-bottom:14px"></div>
+          <div class="field">
+            <textarea id="comment-input" rows="2" placeholder="Tulis masukan atau pertanyaan…"></textarea>
+          </div>
+          <button class="btn btn-secondary" id="comment-submit" style="margin-top:8px">Kirim Komentar</button>
+        </div>
       </div>
 
       <div style="width:320px;flex-shrink:0;display:flex;flex-direction:column;gap:16px">
@@ -117,10 +126,14 @@
 
     // Actions
     const canDelete = user.role === "kepala_sekolah" || (sop.created_by === user.id && sop.status === "draft");
+    const isWakaReviewer = user.role === "waka" && sop.bidang === user.bidang;
     const actions = document.getElementById("actions");
     let actionsHtml = `<a href="/sop-print.html?id=${id}" target="_blank" class="btn btn-secondary">Cetak / PDF</a>`;
     if (isDraft && isOwnerOrAdmin) {
       actionsHtml += `<button class="btn btn-primary" id="submit-btn">Ajukan Persetujuan</button>`;
+    }
+    if (sop.status === "menunggu_review" && isWakaReviewer) {
+      actionsHtml += `<a href="/waka-review.html" class="btn btn-primary">Tinjau di Tinjauan Waka</a>`;
     }
     if (sop.status === "menunggu_persetujuan" && user.role === "kepala_sekolah") {
       actionsHtml += `<a href="/approvals.html" class="btn btn-primary">Tinjau di Antrean Persetujuan</a>`;
@@ -162,6 +175,47 @@
         await api(`/sop/${id}/confirm-read`, { method: "POST" });
       });
     }
+
+    loadComments();
+    document.getElementById("comment-submit").addEventListener("click", async () => {
+      const input = document.getElementById("comment-input");
+      if (!input.value.trim()) return;
+      const btn = document.getElementById("comment-submit");
+      btn.disabled = true;
+      try {
+        await api(`/sop/${id}/comments`, {
+          method: "POST",
+          body: JSON.stringify({ comment: input.value.trim() }),
+        });
+        input.value = "";
+        await loadComments();
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+
+  async function loadComments() {
+    const listEl = document.getElementById("comments-list");
+    if (!listEl) return;
+    const comments = await api(`/sop/${id}/comments`);
+    const initials = (name) => name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+
+    listEl.innerHTML =
+      comments
+        .map(
+          (c) => `
+      <div class="comment-item">
+        <div class="comment-avatar">${initials(c.author_name)}</div>
+        <div class="comment-body">
+          <div class="comment-meta"><strong>${c.author_name}</strong> · ${fmtDateTime(c.created_at)}</div>
+          <div>${c.comment.replace(/</g, "&lt;")}</div>
+        </div>
+      </div>`
+        )
+        .join("") || `<div class="empty-state" style="padding:12px 0">Belum ada komentar.</div>`;
   }
 
   render();

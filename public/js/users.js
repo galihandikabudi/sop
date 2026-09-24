@@ -1,4 +1,6 @@
 // public/js/users.js
+const ROLE_LABEL = { kepala_sekolah: "Kepala Sekolah", waka: "Waka Bidang", staff: "Staf" };
+
 (async function () {
   const user = await renderSidebar();
   if (!user) return;
@@ -20,7 +22,7 @@
         <td style="font-weight:600">${u.name}</td>
         <td style="color:var(--muted)">${u.email}</td>
         <td style="color:var(--muted)">${u.bidang || "—"}</td>
-        <td>${u.role === "kepala_sekolah" ? "Kepala Sekolah" : "Staf"}</td>
+        <td>${ROLE_LABEL[u.role] || u.role}</td>
       </tr>`
       )
       .join("");
@@ -37,6 +39,7 @@
           name: document.getElementById("name").value,
           email: document.getElementById("email").value,
           bidang: bidangSelect.value,
+          role: document.getElementById("role").value,
           password: document.getElementById("password").value,
         }),
       });

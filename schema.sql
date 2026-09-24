@@ -1,13 +1,13 @@
--- schema.sql
--- Run once against your Cloudflare D1 database:
---   wrangler d1 execute sop-muhada-db --remote --file=./schema.sql
+-- schema.sql — full schema for a FRESH install.
+-- If you already have a live database, do NOT re-run this file — instead
+-- run migrations/002_tiered_approval_comments_audit.sql once (see README).
 
 CREATE TABLE IF NOT EXISTS users (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   name          TEXT NOT NULL,
   email         TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
-  role          TEXT NOT NULL CHECK (role IN ('kepala_sekolah', 'staff')),
+  role          TEXT NOT NULL CHECK (role IN ('kepala_sekolah', 'waka', 'staff')),
   bidang        TEXT,               -- NULL for kepala_sekolah (sees semua bidang)
   created_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS sop (
   content      TEXT NOT NULL DEFAULT '',
   version      TEXT NOT NULL DEFAULT '1.0',
   status       TEXT NOT NULL DEFAULT 'draft'
-               CHECK (status IN ('draft', 'menunggu_persetujuan', 'berlaku', 'ditolak', 'kedaluwarsa')),
+               CHECK (status IN ('draft', 'menunggu_review', 'menunggu_persetujuan', 'berlaku', 'ditolak', 'kedaluwarsa')),
   valid_until  TEXT,                -- ISO date; NULL until disahkan
   created_by   INTEGER NOT NULL REFERENCES users(id),
   created_at   TEXT NOT NULL DEFAULT (datetime('now')),
@@ -50,6 +50,28 @@ CREATE TABLE IF NOT EXISTS read_confirmations (
   PRIMARY KEY (sop_id, user_id)
 );
 
+CREATE TABLE IF NOT EXISTS sop_comments (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  sop_id     INTEGER NOT NULL REFERENCES sop(id) ON DELETE CASCADE,
+  user_id    INTEGER NOT NULL REFERENCES users(id),
+  comment    TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS activity_log (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  actor_id    INTEGER REFERENCES users(id),
+  actor_name  TEXT NOT NULL,
+  action      TEXT NOT NULL,   -- create | update | submit | waka_approve | waka_reject | approve | reject | delete | comment | user_create
+  entity_type TEXT NOT NULL,   -- sop | user
+  entity_id   INTEGER,
+  detail      TEXT,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_sop_status ON sop(status);
 CREATE INDEX IF NOT EXISTS idx_sop_bidang ON sop(bidang);
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_comments_sop ON sop_comments(sop_id);
+CREATE INDEX IF NOT EXISTS idx_activity_entity ON activity_log(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_activity_created ON activity_log(created_at);

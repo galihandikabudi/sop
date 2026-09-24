@@ -22,8 +22,18 @@ function fmtDate(iso) {
   return d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
 }
 
+// SQLite's datetime('now') returns "YYYY-MM-DD HH:MM:SS" in UTC with no
+// timezone marker — normalize it to real ISO-8601 UTC before parsing so
+// the browser shows it correctly converted to local time.
+function fmtDateTime(sqliteDatetime) {
+  if (!sqliteDatetime) return "—";
+  const d = new Date(String(sqliteDatetime).replace(" ", "T") + "Z");
+  return `${d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}, ${d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`;
+}
+
 const STATUS_LABEL = {
   draft: "Draft",
+  menunggu_review: "Menunggu Review Waka",
   menunggu_persetujuan: "Menunggu ACC",
   berlaku: "Berlaku",
   ditolak: "Ditolak",

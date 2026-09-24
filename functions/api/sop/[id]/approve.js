@@ -1,5 +1,6 @@
 // POST /api/sop/:id/approve  { valid_until?, note? } — Kepala Sekolah only
 import { getSessionUser, json, unauthorized, forbidden } from "../../../../lib/auth.js";
+import { logActivity } from "../../../../lib/log.js";
 
 function bumpVersion(version) {
   const [major, minor = "0"] = String(version).split(".");
@@ -32,6 +33,15 @@ export async function onRequestPost({ request, env, params }) {
     `INSERT INTO sop_versions (sop_id, version, content, status, note, actor_id)
      VALUES (?, ?, ?, 'berlaku', ?, ?)`
   ).bind(sop.id, newVersion, sop.content, body.note || "Disahkan", user.id).run();
+
+  await logActivity(env, {
+    actorId: user.id,
+    actorName: user.name,
+    action: "approve",
+    entityType: "sop",
+    entityId: sop.id,
+    detail: `Mengesahkan "${sop.title}" (v${newVersion}, berlaku s.d. ${validUntil})`,
+  });
 
   return json({ ok: true, version: newVersion, valid_until: validUntil });
 }

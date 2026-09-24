@@ -118,6 +118,7 @@ input, select, textarea {
   padding: 3px 9px; border-radius: 999px;
 }
 .badge-draft { background: #EDE9DD; color: #5B6663; }
+.badge-menunggu_review { background: #DCEEF7; color: #1B4E6B; }
 .badge-menunggu_persetujuan { background: var(--pending-bg); color: var(--pending-text); }
 .badge-berlaku { background: var(--ok-bg); color: var(--primary); }
 .badge-ditolak { background: var(--danger-bg); color: var(--danger-text); }
@@ -174,3 +175,19 @@ tbody tr:hover { background: #FBF9F4; }
   width: 380px; background: var(--surface); border: 1px solid var(--border);
   border-radius: 14px; padding: 36px; display: flex; flex-direction: column; gap: 18px;
 }
+
+.comment-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid #F0EDE3; }
+.comment-item:last-child { border-bottom: none; }
+.comment-avatar {
+  width: 30px; height: 30px; border-radius: 999px; background: var(--primary-dark);
+  color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0;
+}
+.comment-body { font-size: 13px; }
+.comment-meta { font-size: 11.5px; color: var(--muted); margin-bottom: 2px; }
+.comment-meta strong { color: var(--ink); }
+
+.log-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #F0EDE3; font-size: 13px; }
+.log-item:last-child { border-bottom: none; }
+.log-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--primary); margin-top: 6px; flex-shrink: 0; }
+.log-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }

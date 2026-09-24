@@ -1,16 +1,17 @@
-// POST /api/sop/:id/reject  { note } — Kepala Sekolah only; sends SOP back to draft
+// POST /api/sop/:id/waka-reject  { note } — Waka bidang sends SOP back to draft
 import { getSessionUser, json, unauthorized, forbidden } from "../../../../lib/auth.js";
 import { logActivity } from "../../../../lib/log.js";
 
 export async function onRequestPost({ request, env, params }) {
   const user = await getSessionUser(request, env);
   if (!user) return unauthorized();
-  if (user.role !== "kepala_sekolah") return forbidden("Hanya Kepala Sekolah yang dapat menolak SOP.");
+  if (user.role !== "waka") return forbidden("Hanya Waka bidang yang dapat meninjau di tahap ini.");
 
   const sop = await env.DB.prepare("SELECT * FROM sop WHERE id = ?").bind(params.id).first();
   if (!sop) return json({ error: "SOP tidak ditemukan." }, 404);
-  if (sop.status !== "menunggu_persetujuan") {
-    return json({ error: "SOP ini tidak sedang menunggu persetujuan." }, 400);
+  if (sop.bidang !== user.bidang) return forbidden("SOP ini bukan dari bidang Anda.");
+  if (sop.status !== "menunggu_review") {
+    return json({ error: "SOP ini tidak sedang menunggu review Waka." }, 400);
   }
 
   const { note } = await request.json().catch(() => ({}));
@@ -28,10 +29,10 @@ export async function onRequestPost({ request, env, params }) {
   await logActivity(env, {
     actorId: user.id,
     actorName: user.name,
-    action: "reject",
+    action: "waka_reject",
     entityType: "sop",
     entityId: sop.id,
-    detail: `Menolak "${sop.title}": ${note}`,
+    detail: `Menolak "${sop.title}" di tahap Waka: ${note}`,
   });
 
   return json({ ok: true });

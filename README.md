@@ -88,6 +88,75 @@ untuk membuat akun Kepala Sekolah pertama, tanpa perlu terminal atau
 aman dibiarkan ada di kode. Setelah itu, login di `/index.html`, lalu
 tambahkan akun staf per bidang lewat halaman **Pengguna**.
 
+## Pembaruan: Approval Berjenjang, Komentar, Log Aktivitas, QR Cetak
+
+**PENTING — jalankan migrasi database dulu sebelum meng-upload kode baru**,
+karena kode baru mengandalkan kolom/tabel yang belum ada di database lama:
+
+1. Dashboard Cloudflare → D1 SQL Database → buka `sop-muhada-db` → tab
+   **Console**.
+2. Buka file `migrations/002_tiered_approval_comments_audit.sql` dari zip
+   ini. Jalankan **satu blok per satu** (ada 5 blok, dipisah komentar
+   `-- Block N`) — salin satu blok, Execute, baru lanjut ke blok berikutnya,
+   sama seperti waktu menjalankan `schema.sql` pertama kali.
+3. Setelah semua blok berhasil, buka tab **Tables** — pastikan tabel
+   `sop_comments` dan `activity_log` sudah muncul, dan tidak ada error di
+   blok mana pun.
+4. Baru setelah itu, upload/timpa semua file kode yang berubah ke GitHub
+   (lihat daftar di bawah).
+
+Kalau ini instalasi **baru** (belum pernah menjalankan `schema.sql` sama
+sekali), langsung jalankan `schema.sql` yang sudah diperbarui — tidak perlu
+file migrasi.
+
+### 1. Approval berjenjang (Waka bidang → Kepala Sekolah)
+
+- Di halaman **Pengguna**, Kepala Sekolah sekarang bisa membuat akun dengan
+  peran **Waka Bidang** (selain Staf).
+- Kalau ada akun Waka untuk suatu bidang, SOP yang diajukan staf bidang itu
+  akan masuk ke antrean Waka dulu (halaman baru **Tinjauan Waka**) sebelum
+  diteruskan ke antrean Kepala Sekolah. Waka bisa menyetujui (diteruskan)
+  atau menolak (kembali ke draft dengan catatan).
+- Kalau suatu bidang **belum punya** akun Waka, alurnya tetap seperti
+  sebelumnya — langsung ke Kepala Sekolah, tidak ada yang berubah.
+
+### 2. Komentar/diskusi
+
+Setiap halaman Detail SOP sekarang punya kotak "Diskusi / Komentar" di
+bawah isi SOP — staf lain di bidang yang sama (atau Kepala Sekolah) bisa
+menulis masukan sebelum SOP diajukan, tanpa harus menunggu proses
+tolak-ajukan-ulang.
+
+### 3. Log aktivitas
+
+Halaman baru **Log Aktivitas** (khusus Kepala Sekolah) mencatat riwayat:
+pembuatan/pengubahan/penghapusan SOP, pengajuan, review Waka, pengesahan/
+penolakan, komentar, dan pembuatan akun — lengkap dengan siapa dan kapan.
+
+### 4. QR code di halaman cetak
+
+Halaman Cetak/PDF sekarang menampilkan kode QR yang mengarah ke versi
+online SOP tersebut, supaya siapa pun yang memegang salinan cetak bisa
+memindai dan langsung memastikan itu masih versi terbaru. QR dibuat lewat
+layanan publik gratis (api.qrserver.com) yang memerlukan koneksi internet
+saat mencetak — kalau layanan itu tidak bisa diakses, tautan URL-nya
+ditampilkan sebagai teks biasa.
+
+### Berkas yang baru/berubah pada pembaruan ini
+
+Baru: `migrations/002_tiered_approval_comments_audit.sql`, `lib/log.js`,
+`functions/api/sop/[id]/waka-approve.js`, `functions/api/sop/[id]/waka-reject.js`,
+`functions/api/sop/[id]/comments.js`, `functions/api/activity-log.js`,
+`public/waka-review.html`, `public/js/waka-review.js`,
+`public/activity-log.html`, `public/js/activity-log.js`
+
+Berubah: `schema.sql`, `functions/api/sop/index.js`, `functions/api/sop/[id].js`,
+`functions/api/sop/[id]/submit.js`, `functions/api/sop/[id]/approve.js`,
+`functions/api/sop/[id]/reject.js`, `functions/api/sop/[id]/delete.js`,
+`functions/api/users/index.js`, `public/js/api.js`, `public/js/sidebar.js`,
+`public/js/sop-detail.js`, `public/users.html`, `public/js/users.js`,
+`public/css/style.css`, `public/sop-print.html`
+
 ## Fitur lain
 
 - **Format teks kaya**: kotak isi SOP (saat membuat/mengedit draft) mendukung
