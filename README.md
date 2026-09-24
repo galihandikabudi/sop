@@ -25,7 +25,6 @@ public/            → frontend statis (yang di-deploy sebagai situs)
 functions/api/      → API (Cloudflare Pages Functions, tiap file = 1 route)
 lib/auth.js         → helper login, hash password, session
 schema.sql          → skema database D1
-wrangler.toml       → konfigurasi binding database
 ```
 
 Seluruh proses di bawah ini dilakukan lewat GitHub (upload biasa, tidak
@@ -41,7 +40,7 @@ biasa) — **tidak perlu install Wrangler/CLI apa pun.**
 3. Di halaman repo GitHub yang baru dibuat, klik **"uploading an existing
    file"**, lalu seret (drag-and-drop) seluruh isi folder hasil ekstrak
    (folder `public`, `functions`, `lib`, dan file `schema.sql`,
-   `wrangler.toml`, `README.md`, `.gitignore`) ke area upload, lalu klik
+   `README.md`, `.gitignore`) ke area upload, lalu klik
    **Commit changes**.
    (Alternatif: jika terbiasa dengan Git, boleh juga `git push` seperti
    biasa — hasilnya sama.)
@@ -102,19 +101,30 @@ tambahkan akun staf per bidang lewat halaman **Pengguna**.
 5. **Beranda** menampilkan SOP yang mendekati kedaluwarsa (< 30 hari) dan
    tingkat kepatuhan per bidang.
 
-## Catatan soal `wrangler.toml`
-
-File ini hanya dipakai kalau suatu saat Anda ingin menjalankan atau men-deploy
-proyek dari komputer sendiri lewat CLI Wrangler. Untuk alur di atas (upload
-GitHub + hubungkan lewat dashboard Cloudflare), file ini **tidak dipakai
-sama sekali** dan boleh diabaikan — binding database diatur lewat dashboard,
-bukan lewat file ini.
-
 ## Menjalankan secara lokal (opsional, perlu Node.js + Wrangler)
+
+Proyek ini sengaja **tidak** menyertakan `wrangler.toml` di repo — kalau ada,
+Cloudflare Pages akan salah mendeteksi proyek ini sebagai Worker biasa dan
+mencoba menjalankan `wrangler deploy` (bukan build Pages statis), yang akan
+gagal. Kalau Anda ingin coba jalankan di komputer sendiri, buat file
+`wrangler.toml` sendiri (jangan commit ke repo yang terhubung ke Pages),
+isinya:
+
+```toml
+name = "sop-muhada"
+compatibility_date = "2026-09-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sop-muhada-db"
+database_id = "<database_id dari dashboard D1>"
+```
+
+lalu jalankan:
 
 ```
 npm install -g wrangler
-wrangler pages dev public --d1=DB=sop-muhada-db
+wrangler pages dev public
 ```
 
 ## Pengembangan lanjutan yang bisa ditambahkan
