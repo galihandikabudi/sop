@@ -88,6 +88,21 @@ untuk membuat akun Kepala Sekolah pertama, tanpa perlu terminal atau
 aman dibiarkan ada di kode. Setelah itu, login di `/index.html`, lalu
 tambahkan akun staf per bidang lewat halaman **Pengguna**.
 
+## Fitur lain
+
+- **Format teks kaya**: kotak isi SOP (saat membuat/mengedit draft) mendukung
+  tebal/miring/garis bawah/daftar, plus tombol **Format Otomatis** yang
+  otomatis menebalkan & memperbesar baris judul bernomor (`1. Tujuan`,
+  `2. Ruang Lingkup`, dst.) tanpa mempengaruhi sub-poin seperti `3.1 …`.
+  Draf dari AI otomatis diformat begitu juga.
+- **Hapus SOP**: di halaman Daftar SOP dan Detail SOP. Staf hanya bisa
+  menghapus draft miliknya sendiri; Kepala Sekolah bisa menghapus SOP apa
+  pun.
+- **Cetak / Ekspor PDF**: tombol di halaman Detail SOP membuka halaman cetak
+  dengan kop "Dokumen Mutu" (nomor dokumen otomatis, bidang, versi, tanggal
+  berlaku) dan kolom tanda tangan Disusun/Diperiksa/Disahkan. Gunakan dialog
+  cetak browser (Ctrl/Cmd+P) lalu pilih tujuan **Save as PDF**.
+
 ## Fitur "Buat Draf dengan AI"
 
 Di halaman **Ajukan SOP Baru**, ada tombol untuk membuat draf isi SOP otomatis

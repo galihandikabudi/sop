@@ -86,37 +86,64 @@
       </div>
     `;
 
-    // Body: editable textarea if draft & owner, else plain text
+    // Body: rich editor if draft & owner, else read-only rich content
     const bodyCard = document.getElementById("body-card");
     if (isDraft && isOwnerOrAdmin) {
       bodyCard.innerHTML = `
         <div class="field">
-          <label for="edit-content">Isi SOP</label>
-          <textarea id="edit-content" rows="16">${sop.content}</textarea>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <label style="margin-bottom:0">Isi SOP</label>
+          </div>
+          <div class="editor-toolbar" id="edit-toolbar"></div>
+          <div id="edit-content" class="rich-editor" contenteditable="true">${toDisplayHtml(sop.content)}</div>
         </div>
         <button class="btn btn-secondary" id="save-btn" style="margin-top:12px">Simpan Perubahan</button>
       `;
+      const editEl = document.getElementById("edit-content");
+      const editToolbar = document.getElementById("edit-toolbar");
+      editToolbar.innerHTML = richEditorToolbarHtml();
+      wireRichEditorToolbar(editToolbar, editEl);
+
       document.getElementById("save-btn").addEventListener("click", async () => {
         await api(`/sop/${id}`, {
           method: "PUT",
-          body: JSON.stringify({ content: document.getElementById("edit-content").value }),
+          body: JSON.stringify({ content: editEl.innerHTML }),
         });
         window.location.reload();
       });
     } else {
-      bodyCard.innerHTML = `<div style="white-space:pre-line;font-size:13.5px;line-height:1.7;color:#3A423F">${sop.content || "(Belum ada isi.)"}</div>`;
+      bodyCard.innerHTML = `<div class="rich-content">${toDisplayHtml(sop.content) || "<p style='color:var(--muted)'>(Belum ada isi.)</p>"}</div>`;
     }
 
     // Actions
+    const canDelete = user.role === "kepala_sekolah" || (sop.created_by === user.id && sop.status === "draft");
     const actions = document.getElementById("actions");
-    let actionsHtml = "";
+    let actionsHtml = `<a href="/sop-print.html?id=${id}" target="_blank" class="btn btn-secondary">Cetak / PDF</a>`;
     if (isDraft && isOwnerOrAdmin) {
       actionsHtml += `<button class="btn btn-primary" id="submit-btn">Ajukan Persetujuan</button>`;
     }
     if (sop.status === "menunggu_persetujuan" && user.role === "kepala_sekolah") {
       actionsHtml += `<a href="/approvals.html" class="btn btn-primary">Tinjau di Antrean Persetujuan</a>`;
     }
+    if (canDelete) {
+      actionsHtml += `<button class="btn btn-danger" id="delete-btn">Hapus</button>`;
+    }
     actions.innerHTML = actionsHtml;
+
+    const deleteBtn = document.getElementById("delete-btn");
+    if (deleteBtn) {
+      deleteBtn.addEventListener("click", async () => {
+        if (!confirm(`Hapus SOP "${sop.title}"? Tindakan ini tidak bisa dibatalkan.`)) return;
+        deleteBtn.disabled = true;
+        try {
+          await api(`/sop/${id}/delete`, { method: "POST" });
+          window.location.href = "/sop-list.html";
+        } catch (err) {
+          alert(err.message);
+          deleteBtn.disabled = false;
+        }
+      });
+    }
 
     const submitBtn = document.getElementById("submit-btn");
     if (submitBtn) {

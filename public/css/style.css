@@ -142,6 +142,27 @@ tbody tr:hover { background: #FBF9F4; }
 }
 .field textarea { resize: vertical; }
 
+.editor-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.editor-toolbar button {
+  background: #fff; border: 1px solid var(--border); border-radius: 6px;
+  padding: 6px 11px; font-size: 12.5px; color: var(--ink); font-family: inherit;
+}
+.editor-toolbar button:hover { background: #FBF9F4; }
+
+.rich-editor {
+  border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px;
+  min-height: 320px; font-size: 13.5px; line-height: 1.7; outline: none;
+  background: #fff;
+}
+.rich-editor:focus { border-color: var(--primary); }
+.rich-editor p, .rich-content p { margin: 0 0 10px; }
+.rich-content { font-size: 13.5px; line-height: 1.7; color: #3A423F; }
+.sop-heading {
+  display: block; font-weight: 700; font-size: 16px; margin: 16px 0 8px;
+  font-family: 'Source Serif 4', Georgia, serif; color: var(--ink);
+}
+.rich-editor .sop-heading:first-child, .rich-content .sop-heading:first-child { margin-top: 0; }
+
 .error-text { color: var(--danger-text); font-size: 13px; }
 .empty-state { color: var(--muted); font-size: 13.5px; padding: 24px; text-align: center; }
 

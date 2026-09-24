@@ -29,14 +29,15 @@
       </div>
       <div class="field">
         <div style="display:flex;align-items:center;justify-content:space-between">
-          <label for="content" style="margin-bottom:0">Isi SOP (Tujuan, Ruang Lingkup, Prosedur)</label>
+          <label style="margin-bottom:0">Isi SOP (Tujuan, Ruang Lingkup, Prosedur)</label>
           <button type="button" id="ai-generate-btn" class="btn btn-secondary" style="padding:7px 12px;font-size:12.5px">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg>
             Buat Draf dengan AI
           </button>
         </div>
-        <textarea id="content" rows="14" placeholder="1. Tujuan&#10;…&#10;&#10;2. Ruang Lingkup&#10;…&#10;&#10;3. Prosedur&#10;3.1 …"></textarea>
-        <div id="ai-status" style="font-size:12.5px;color:var(--muted);display:none"></div>
+        <div class="editor-toolbar" id="toolbar"></div>
+        <div id="content" class="rich-editor" contenteditable="true"></div>
+        <div id="ai-status" style="font-size:12.5px;color:var(--muted);display:none;margin-top:6px"></div>
       </div>
       <div id="error" class="error-text" style="display:none"></div>
       <div style="display:flex;gap:10px">
@@ -49,6 +50,7 @@
 
 <script src="/js/api.js"></script>
 <script src="/js/sidebar.js"></script>
+<script src="/js/rich-editor.js"></script>
 <script>
 (async function () {
   const user = await renderSidebar();
@@ -62,12 +64,16 @@
     bidangSelect.disabled = true;
   }
 
+  const contentEl = document.getElementById("content");
+  const toolbarEl = document.getElementById("toolbar");
+  toolbarEl.innerHTML = richEditorToolbarHtml();
+  wireRichEditorToolbar(toolbarEl, contentEl);
+
   document.getElementById("ai-generate-btn").addEventListener("click", async () => {
     const errorEl = document.getElementById("error");
     const statusEl = document.getElementById("ai-status");
     const btn = document.getElementById("ai-generate-btn");
     const titleVal = document.getElementById("title").value.trim();
-    const contentEl = document.getElementById("content");
     errorEl.style.display = "none";
 
     if (!titleVal) {
@@ -75,20 +81,20 @@
       errorEl.style.display = "block";
       return;
     }
-    if (contentEl.value.trim() && !confirm("Isi SOP saat ini akan diganti dengan draf dari AI. Lanjutkan?")) {
+    if (contentEl.innerText.trim() && !confirm("Isi SOP saat ini akan diganti dengan draf dari AI. Lanjutkan?")) {
       return;
     }
 
     btn.disabled = true;
     statusEl.style.display = "block";
-    statusEl.textContent = "Claude sedang menyusun draf…";
+    statusEl.textContent = "AI sedang menyusun draf…";
 
     try {
       const result = await api("/sop/generate-ai", {
         method: "POST",
         body: JSON.stringify({ title: titleVal, bidang: bidangSelect.value }),
       });
-      contentEl.value = result.content;
+      contentEl.innerHTML = autoFormatSopHtml(result.content);
       statusEl.textContent = "Draf dibuat oleh AI — tinjau dan sesuaikan sebelum diajukan.";
     } catch (err) {
       statusEl.style.display = "none";
@@ -109,7 +115,7 @@
         body: JSON.stringify({
           title: document.getElementById("title").value,
           bidang: bidangSelect.value,
-          content: document.getElementById("content").value,
+          content: contentEl.innerHTML,
         }),
       });
       window.location.href = `/sop-detail.html?id=${result.id}`;

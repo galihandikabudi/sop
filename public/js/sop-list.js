@@ -20,6 +20,7 @@
       list
         .map((s) => {
           const badge = effectiveBadge(s);
+          const canDelete = user.role === "kepala_sekolah" || (s.created_by === user.id && s.status === "draft");
           return `
       <tr onclick="window.location.href='/sop-detail.html?id=${s.id}'">
         <td style="font-weight:600">${s.title}</td>
@@ -28,9 +29,29 @@
         <td><span class="badge badge-${badge.cls}">${badge.label}</span></td>
         <td style="color:var(--muted)">${fmtDate(s.valid_until)}</td>
         <td style="color:var(--muted)">${fmtDate(s.updated_at)}</td>
+        <td style="text-align:right">${
+          canDelete
+            ? `<button class="btn btn-danger" style="padding:6px 10px;font-size:12px" data-delete-id="${s.id}" data-delete-title="${s.title.replace(/"/g, "&quot;")}">Hapus</button>`
+            : ""
+        }</td>
       </tr>`;
         })
-        .join("") || `<tr><td colspan="6" class="empty-state">Belum ada SOP yang cocok.</td></tr>`;
+        .join("") || `<tr><td colspan="7" class="empty-state">Belum ada SOP yang cocok.</td></tr>`;
+
+    rowsEl.querySelectorAll("[data-delete-id]").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.deleteId;
+        const title = btn.dataset.deleteTitle;
+        if (!confirm(`Hapus SOP "${title}"? Tindakan ini tidak bisa dibatalkan.`)) return;
+        try {
+          await api(`/sop/${id}/delete`, { method: "POST" });
+          load();
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+    });
   }
 
   searchEl.addEventListener("input", () => load());
