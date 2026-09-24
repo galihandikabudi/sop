@@ -88,6 +88,49 @@ untuk membuat akun Kepala Sekolah pertama, tanpa perlu terminal atau
 aman dibiarkan ada di kode. Setelah itu, login di `/index.html`, lalu
 tambahkan akun staf per bidang lewat halaman **Pengguna**.
 
+## Fitur "Buat Draf dengan AI"
+
+Di halaman **Ajukan SOP Baru**, ada tombol untuk membuat draf isi SOP otomatis
+dari judul yang diketik, mengikuti gaya bahasa dan nilai brand "Muhada
+Berdaya" (profesional, membangun, berlandaskan nilai keislaman/kemuhammadiyahan).
+Ada dua opsi mesin AI — pilih salah satu (atau keduanya, Claude akan
+diprioritaskan bila tersedia):
+
+### Opsi gratis: Cloudflare Workers AI
+
+Model open-source (Llama) yang dijalankan Cloudflare sendiri, kuota gratis
+10.000 "neuron"/hari — untuk kebutuhan draf SOP satu sekolah biasanya lebih
+dari cukup, dan **tidak perlu API key sama sekali**. Kualitas tulisannya
+sedikit lebih sederhana dibanding Claude, tapi cukup memadai sebagai draf
+awal yang akan Anda tinjau ulang.
+
+1. Dashboard Cloudflare → project Pages Anda → **Settings** → **Functions**.
+2. Cari bagian **Workers AI bindings** (terpisah dari D1 database bindings)
+   → **Add binding**.
+3. Isi **Variable name**: `AI` → Save.
+4. Tunggu redeploy otomatis.
+
+### Opsi berbayar (usage-based, sangat murah): Claude (Anthropic)
+
+Kualitas tulisan lebih halus dan natural. Biayanya terpisah dari langganan
+Claude.ai apa pun — dikenakan per token lewat API key Anthropic sendiri,
+biasanya jauh di bawah beberapa ribu rupiah per bulan untuk pemakaian sekolah.
+
+1. Buat API key di [console.anthropic.com](https://console.anthropic.com) →
+   **API Keys** → **Create Key**.
+2. Dashboard Cloudflare → project Pages Anda → **Settings** →
+   **Environment variables** → **Add variable**.
+   - Variable name: `ANTHROPIC_API_KEY`
+   - Value: (tempel API key Anda)
+   - Tandai sebagai **Encrypt/Secret**, environment **Production**.
+3. Simpan, tunggu redeploy otomatis.
+
+Tanpa salah satu di atas, tombol "Buat Draf dengan AI" akan menampilkan
+pesan error yang menjelaskan apa yang perlu diaktifkan — fitur lain aplikasi
+tetap berjalan normal. Draf yang dihasilkan AI (apa pun mesinnya) selalu
+bisa dan sebaiknya diedit dulu di kotak isi SOP sebelum diajukan untuk
+persetujuan.
+
 ## Alur kerja aplikasi
 
 1. Staf bidang login → membuat **draft** SOP di bidangnya sendiri.

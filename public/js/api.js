@@ -42,6 +42,23 @@ const BIDANG_LIST = [
   "Publikasi",
 ];
 
+function daysLeft(validUntil) {
+  if (!validUntil) return null;
+  return Math.ceil((new Date(validUntil) - new Date()) / (1000 * 60 * 60 * 24));
+}
+
+// Mirrors the visual language from the design mockup: an SOP that's still
+// "berlaku" but close to (or past) its expiry date shows an orange/red
+// warning badge instead of a plain green "Berlaku" badge.
+function effectiveBadge(sop) {
+  if (sop.status === "berlaku" && sop.valid_until) {
+    const d = daysLeft(sop.valid_until);
+    if (d < 0) return { cls: "kedaluwarsa", label: "Kedaluwarsa" };
+    if (d < 30) return { cls: "review", label: "Perlu Ditinjau" };
+  }
+  return { cls: sop.status, label: STATUS_LABEL[sop.status] || sop.status };
+}
+
 async function requireUser() {
   try {
     return await api("/auth/me");

@@ -42,14 +42,20 @@
 
   document.getElementById("akan-kedaluwarsa").innerHTML =
     data.akanKedaluwarsa
-      .map(
-        (s) => `
+      .map((s) => {
+        const d = daysLeft(s.valid_until);
+        const chip =
+          d <= 0
+            ? `<span class="badge badge-kedaluwarsa">Kedaluwarsa</span>`
+            : `<span class="badge badge-review">${d} hari lagi</span>`;
+        return `
       <a href="/sop-detail.html?id=${s.id}" style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#FBF6EC;border-radius:8px;text-decoration:none;color:inherit">
         <div>
           <div style="font-size:13.5px;font-weight:600">${s.title}</div>
           <div style="font-size:12px;color:var(--muted);margin-top:2px">${s.bidang} · berlaku s.d. ${fmtDate(s.valid_until)}</div>
         </div>
-      </a>`
-      )
+        ${chip}
+      </a>`;
+      })
       .join("") || `<div class="empty-state">Tidak ada SOP yang perlu ditinjau.</div>`;
 })();

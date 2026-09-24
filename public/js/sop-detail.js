@@ -19,9 +19,8 @@
   const isOwnerOrAdmin = sop.created_by === user.id || user.role === "kepala_sekolah";
   const isDraft = sop.status === "draft";
   const isBerlaku = sop.status === "berlaku";
-  const daysLeft = sop.valid_until
-    ? Math.ceil((new Date(sop.valid_until) - new Date()) / (1000 * 60 * 60 * 24))
-    : null;
+  const daysLeftVal = daysLeft(sop.valid_until);
+  const topBadge = effectiveBadge(sop);
 
   function render() {
     contentEl.innerHTML = `
@@ -33,7 +32,7 @@
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
           <div>
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-              <span class="badge badge-${sop.status}">${STATUS_LABEL[sop.status] || sop.status}</span>
+              <span class="badge badge-${topBadge.cls}">${topBadge.label}</span>
               <span style="color:var(--muted);font-size:12.5px">Versi ${sop.version}${sop.valid_until ? " · berlaku s.d. " + fmtDate(sop.valid_until) : ""}</span>
             </div>
             <h1 class="serif" style="margin:0;font-size:24px;font-weight:600;max-width:520px">${sop.title}</h1>
@@ -42,11 +41,11 @@
           <div style="display:flex;gap:8px;flex-shrink:0" id="actions"></div>
         </div>
 
-        ${isBerlaku && daysLeft !== null && daysLeft < 30 ? `
+        ${isBerlaku && daysLeftVal !== null && daysLeftVal < 30 ? `
         <div class="card" style="background:#FBF6EC;border-color:#F0DEBF">
           <div style="font-weight:700;font-size:13.5px;color:var(--warn-text)">Perlu ditinjau ulang</div>
           <div style="font-size:12.5px;color:var(--muted);margin-top:4px">
-            ${daysLeft <= 0 ? "Masa berlaku dokumen ini sudah lewat." : `Masa berlaku berakhir dalam ${daysLeft} hari.`}
+            ${daysLeftVal <= 0 ? "Masa berlaku dokumen ini sudah lewat." : `Masa berlaku berakhir dalam ${daysLeftVal} hari.`}
           </div>
         </div>` : ""}
 

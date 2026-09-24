@@ -18,17 +18,18 @@
 
     rowsEl.innerHTML =
       list
-        .map(
-          (s) => `
+        .map((s) => {
+          const badge = effectiveBadge(s);
+          return `
       <tr onclick="window.location.href='/sop-detail.html?id=${s.id}'">
         <td style="font-weight:600">${s.title}</td>
         <td style="color:var(--muted)">${s.bidang}</td>
         <td style="color:var(--muted)">v${s.version}</td>
-        <td><span class="badge badge-${s.status}">${STATUS_LABEL[s.status] || s.status}</span></td>
+        <td><span class="badge badge-${badge.cls}">${badge.label}</span></td>
         <td style="color:var(--muted)">${fmtDate(s.valid_until)}</td>
         <td style="color:var(--muted)">${fmtDate(s.updated_at)}</td>
-      </tr>`
-        )
+      </tr>`;
+        })
         .join("") || `<tr><td colspan="6" class="empty-state">Belum ada SOP yang cocok.</td></tr>`;
   }
 
