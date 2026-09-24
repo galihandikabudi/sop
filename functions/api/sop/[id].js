@@ -1,0 +1,51 @@
+// GET /api/sop/:id — full detail incl. version history and read status
+// PUT /api/sop/:id  { title, content } — edit a draft (author only)
+import { getSessionUser, json, unauthorized, forbidden } from "../../../lib/auth.js";
+
+async function loadSop(env, id) {
+  return env.DB.prepare(
+    `SELECT s.*, u.name AS created_by_name
+     FROM sop s JOIN users u ON u.id = s.created_by
+     WHERE s.id = ?`
+  ).bind(id).first();
+}
+
+export async function onRequestGet({ request, env, params }) {
+  const user = await getSessionUser(request, env);
+  if (!user) return unauthorized();
+
+  const sop = await loadSop(env, params.id);
+  if (!sop) return json({ error: "SOP tidak ditemukan." }, 404);
+  if (user.role !== "kepala_sekolah" && sop.bidang !== user.bidang) return forbidden();
+
+  const { results: versions } = await env.DB.prepare(
+    `SELECT sv.version, sv.status, sv.note, sv.created_at, u.name AS actor_name
+     FROM sop_versions sv LEFT JOIN users u ON u.id = sv.actor_id
+     WHERE sv.sop_id = ? ORDER BY sv.created_at DESC`
+  ).bind(sop.id).all();
+
+  const myRead = await env.DB.prepare(
+    "SELECT 1 FROM read_confirmations WHERE sop_id = ? AND user_id = ?"
+  ).bind(sop.id, user.id).first();
+
+  return json({ ...sop, versions, hasConfirmedRead: !!myRead });
+}
+
+export async function onRequestPut({ request, env, params }) {
+  const user = await getSessionUser(request, env);
+  if (!user) return unauthorized();
+
+  const sop = await loadSop(env, params.id);
+  if (!sop) return json({ error: "SOP tidak ditemukan." }, 404);
+  if (sop.created_by !== user.id && user.role !== "kepala_sekolah") return forbidden();
+  if (sop.status !== "draft") {
+    return json({ error: "Hanya SOP berstatus draft yang dapat diedit." }, 400);
+  }
+
+  const { title, content } = await request.json().catch(() => ({}));
+  await env.DB.prepare(
+    "UPDATE sop SET title = COALESCE(?, title), content = COALESCE(?, content), updated_at = datetime('now') WHERE id = ?"
+  ).bind(title || null, content || null, sop.id).run();
+
+  return json({ ok: true });
+}

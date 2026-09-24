@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ajukan SOP Baru — Sistem SOP SMK Muhada</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="layout">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main" style="max-width:760px">
+    <div class="page-header">
+      <div>
+        <h1 class="serif">Buat Draft SOP Baru</h1>
+        <div class="sub">Draft dapat diedit sebelum diajukan untuk persetujuan Kepala Sekolah</div>
+      </div>
+    </div>
+
+    <form id="form" class="card" style="display:flex;flex-direction:column;gap:16px">
+      <div class="field">
+        <label for="title">Judul SOP</label>
+        <input id="title" required placeholder="mis. SOP Peminjaman Sarana &amp; Prasarana">
+      </div>
+      <div class="field" id="bidang-field">
+        <label for="bidang">Bidang</label>
+        <select id="bidang" required></select>
+      </div>
+      <div class="field">
+        <label for="content">Isi SOP (Tujuan, Ruang Lingkup, Prosedur)</label>
+        <textarea id="content" rows="14" placeholder="1. Tujuan&#10;…&#10;&#10;2. Ruang Lingkup&#10;…&#10;&#10;3. Prosedur&#10;3.1 …"></textarea>
+      </div>
+      <div id="error" class="error-text" style="display:none"></div>
+      <div style="display:flex;gap:10px">
+        <a href="/sop-list.html" class="btn btn-secondary">Batal</a>
+        <button type="submit" class="btn btn-primary">Simpan Draft</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/sidebar.js"></script>
+<script>
+(async function () {
+  const user = await renderSidebar();
+  if (!user) return;
+
+  const bidangSelect = document.getElementById("bidang");
+  if (user.role === "kepala_sekolah") {
+    bidangSelect.innerHTML = BIDANG_LIST.map((b) => `<option value="${b}">${b}</option>`).join("");
+  } else {
+    bidangSelect.innerHTML = `<option value="${user.bidang}">${user.bidang}</option>`;
+    bidangSelect.disabled = true;
+  }
+
+  document.getElementById("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById("error");
+    errorEl.style.display = "none";
+    try {
+      const result = await api("/sop", {
+        method: "POST",
+        body: JSON.stringify({
+          title: document.getElementById("title").value,
+          bidang: bidangSelect.value,
+          content: document.getElementById("content").value,
+        }),
+      });
+      window.location.href = `/sop-detail.html?id=${result.id}`;
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.style.display = "block";
+    }
+  });
+})();
+</script>
+</body>
+</html>
