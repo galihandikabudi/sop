@@ -510,6 +510,34 @@ Baru: `functions/api/users/directory.js`, `migrations/008_checker_user_id.sql`
 Berubah: `schema.sql`, `functions/api/sop/index.js`, `functions/api/sop/[id].js`,
 `public/sop-new.html`, `public/js/sop-detail.js`, `public/js/waka-review.js`
 
+## Pembaruan: Waka Tidak Meninjau Pengajuannya Sendiri
+
+Kalau yang mengajukan SOP adalah seorang **Waka**, dua aturan baru berlaku:
+
+1. **Pemeriksa wajib diisi**, dan wajib **Waka lain** (di bidang yang sama)
+   atau **Kepala Sekolah** — bukan dirinya sendiri, dan bukan Waka bidang
+   itu sendiri kalau kebetulan hanya ada satu akun Waka (karena Waka itu
+   tepat adalah si pengaju). Dropdown "Nama Pemeriksa" otomatis
+   menyembunyikan pilihan yang tidak valid untuk kasus ini, dan tombol
+   "Ajukan Persetujuan" akan menolak dengan pesan kalau Pemeriksa belum
+   diisi dengan benar.
+   - Kalau Pemeriksa yang dipilih adalah **Waka lain**, alurnya tetap sama
+     seperti biasa: masuk ke **Tinjauan Waka** milik Waka tersebut.
+   - Kalau Pemeriksa yang dipilih adalah **Kepala Sekolah**, tahap
+     Tinjauan Waka dilewati — pengajuan langsung masuk ke antrean
+     persetujuan Kepala Sekolah (karena Kepala Sekolah sekaligus jadi
+     pemeriksa dan penyetuju akhir).
+2. **Waka pembuat pengajuan tidak perlu (dan tidak bisa) meninjau
+   pengajuannya sendiri** di halaman Tinjauan Waka — walaupun SOP itu ada
+   di bidangnya sendiri, SOP itu tidak akan muncul di antrean tinjauannya.
+   Ini juga ditegakkan di server, bukan cuma disembunyikan di tampilan.
+
+### Berkas yang berubah pada pembaruan ini
+
+`functions/api/sop/index.js`, `functions/api/sop/[id]/submit.js`,
+`functions/api/sop/[id]/waka-approve.js`, `functions/api/sop/[id]/waka-reject.js`,
+`public/sop-new.html`, `public/js/sop-detail.js`
+
 ## Fitur lain
 
 - **Format teks kaya**: kotak isi SOP (saat membuat/mengedit draft) mendukung

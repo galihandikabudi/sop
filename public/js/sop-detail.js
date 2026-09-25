@@ -143,8 +143,16 @@
         checkerDirectory = directory;
         const checkerSelect = document.getElementById("checker_name");
         if (!checkerSelect) return;
+        const creatorInfo = directory.find((u) => u.id === sop.created_by);
+        const creatorIsWaka = creatorInfo && creatorInfo.role === "waka";
+        if (creatorIsWaka) {
+          const checkerLabel = document.querySelector('label[for="checker_name"]');
+          if (checkerLabel) checkerLabel.textContent = "Nama Pemeriksa (wajib — Waka lain atau Kepala Sekolah)";
+        }
         const candidates = directory.filter(
-          (u) => u.role === "kepala_sekolah" || (u.role === "waka" && u.bidang === sop.bidang)
+          (u) =>
+            (u.role === "kepala_sekolah" || (u.role === "waka" && u.bidang === sop.bidang)) &&
+            !(creatorIsWaka && u.id === sop.created_by)
         );
         const currentId = sop.checker_user_id || null;
         const currentName = sop.checker_name || "";
@@ -189,7 +197,13 @@
 
     // Actions
     const canDelete = user.role === "kepala_sekolah" || (sop.created_by === user.id && sop.status === "draft");
-    const isWakaReviewer = user.role === "waka" && sop.bidang === user.bidang;
+    // Seorang Waka tidak pernah perlu meninjau pengajuannya sendiri, walau
+    // bidangnya cocok — tombol tinjau hanya muncul untuk Waka lain, atau
+    // Waka yang namanya tercatat sebagai Pemeriksa.
+    const isWakaReviewer =
+      user.role === "waka" &&
+      sop.created_by !== user.id &&
+      (sop.bidang === user.bidang || sop.checker_user_id === user.id);
     const actions = document.getElementById("actions");
     let actionsHtml = `<a href="/sop-print.html?id=${id}" target="_blank" class="btn btn-secondary">Cetak / PDF</a>`;
     if (isDraft && isOwnerOrAdmin) {
@@ -225,8 +239,13 @@
     if (submitBtn) {
       submitBtn.addEventListener("click", async () => {
         submitBtn.disabled = true;
-        await api(`/sop/${id}/submit`, { method: "POST" });
-        window.location.reload();
+        try {
+          await api(`/sop/${id}/submit`, { method: "POST" });
+          window.location.reload();
+        } catch (err) {
+          alert(err.message);
+          submitBtn.disabled = false;
+        }
       });
     }
 

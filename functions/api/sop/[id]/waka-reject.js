@@ -9,7 +9,8 @@ export async function onRequestPost({ request, env, params }) {
 
   const sop = await env.DB.prepare("SELECT * FROM sop WHERE id = ?").bind(params.id).first();
   if (!sop) return json({ error: "SOP tidak ditemukan." }, 404);
-  if (sop.bidang !== user.bidang) return forbidden("SOP ini bukan dari bidang Anda.");
+  if (sop.created_by === user.id) return forbidden("Anda tidak dapat meninjau pengajuan Anda sendiri.");
+  if (sop.bidang !== user.bidang && sop.checker_user_id !== user.id) return forbidden("SOP ini bukan dari bidang Anda.");
   if (sop.status !== "menunggu_review") {
     return json({ error: "SOP ini tidak sedang menunggu review Waka." }, 400);
   }

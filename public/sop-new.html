@@ -82,6 +82,10 @@
   // (Waka bidang yang sama, atau Kepala Sekolah) — bukan lagi ketik bebas,
   // dan bukan staf. Daftar diambil dari /api/users/directory, yang bisa
   // diakses semua peran (bukan cuma Kepala Sekolah seperti /api/users).
+  //
+  // Kalau yang mengajukan sendiri seorang Waka, ia tidak boleh meninjau
+  // pengajuannya sendiri — jadi Pemeriksa wajib diisi dengan Waka LAIN atau
+  // Kepala Sekolah (field dibuat wajib, dan server juga memvalidasi ulang).
   const checkerSelect = document.getElementById("checker_name");
   const directory = await api("/users/directory");
   const ROLE_LABEL_CHECKER = { kepala_sekolah: "Kepala Sekolah", waka: "Waka" };
@@ -96,6 +100,12 @@
   }
   refreshCheckerOptions();
   bidangSelect.addEventListener("change", refreshCheckerOptions);
+
+  if (user.role === "waka") {
+    checkerSelect.required = true;
+    const checkerLabel = document.querySelector('label[for="checker_name"]');
+    if (checkerLabel) checkerLabel.textContent = "Nama Pemeriksa (wajib — Waka lain atau Kepala Sekolah)";
+  }
 
   const contentEl = document.getElementById("content");
   const toolbarEl = document.getElementById("toolbar");

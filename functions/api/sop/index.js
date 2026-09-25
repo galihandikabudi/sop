@@ -22,10 +22,12 @@ export async function onRequestGet({ request, env }) {
   // see their own bidang PLUS any SOP (any bidang) where they're
   // specifically named as the pemeriksa (checker_user_id) — so a SOP also
   // shows up in that Waka's own Tinjauan Waka list, not just the queue for
-  // Waka of the SOP's own bidang.
+  // Waka of the SOP's own bidang. A Waka never needs to review their own
+  // submission, so anything they created themselves is excluded here even
+  // if it happens to match on bidang.
   if (user.role === "waka") {
-    sql += " AND (s.bidang = ? OR s.checker_user_id = ?)";
-    params.push(user.bidang, user.id);
+    sql += " AND (s.bidang = ? OR s.checker_user_id = ?) AND s.created_by != ?";
+    params.push(user.bidang, user.id, user.id);
   } else if (user.role !== "kepala_sekolah") {
     sql += " AND s.bidang = ?";
     params.push(user.bidang);
