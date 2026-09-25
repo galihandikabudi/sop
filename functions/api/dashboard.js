@@ -32,6 +32,17 @@ export async function onRequestGet({ request, env }) {
      ORDER BY valid_from ASC LIMIT 6`
   ).bind(...bind).all();
 
+  // SOP yang sudah punya "pengingat peninjauan" (opsional, lihat migrasi
+  // 006) dan tanggalnya sudah dekat (<=30 hari) atau sudah lewat.
+  const { results: reminders } = await env.DB.prepare(
+    `SELECT id, title, bidang, review_reminder_date
+     FROM sop
+     ${scope ? scope + " AND" : "WHERE"} status = 'berlaku'
+       AND review_reminder_date IS NOT NULL
+       AND julianday(review_reminder_date) - julianday('now') < 30
+     ORDER BY review_reminder_date ASC LIMIT 6`
+  ).bind(...bind).all();
+
   const { results: perBidang } = await env.DB.prepare(
     `SELECT bidang,
             COUNT(*) AS total,
@@ -45,6 +56,7 @@ export async function onRequestGet({ request, env }) {
     menunggu: menunggu.n,
     draft: draft.n,
     aktifTerlama,
+    reminders,
     perBidang,
   });
 }

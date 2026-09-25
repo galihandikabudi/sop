@@ -58,4 +58,27 @@
       </a>`;
       })
       .join("") || `<div class="empty-state">Belum ada SOP yang berlaku.</div>`;
+
+  // Pengingat peninjauan bersifat opsional — kartu ini hanya muncul kalau
+  // ada SOP yang memang ditandai dan tanggalnya sudah dekat/lewat.
+  if (data.reminders && data.reminders.length) {
+    document.getElementById("reminders-card").style.display = "";
+    document.getElementById("reminders").innerHTML = data.reminders
+      .map((s) => {
+        const d = daysLeft(s.review_reminder_date);
+        const chip =
+          d <= 0
+            ? `<span class="badge" style="background:var(--oranye-bg);color:var(--warn-text)">Jatuh tempo</span>`
+            : `<span class="badge" style="background:var(--border);color:var(--muted)">${d} hari lagi</span>`;
+        return `
+      <a href="/sop-detail.html?id=${s.id}" style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg);border-radius:8px;text-decoration:none;color:inherit">
+        <div>
+          <div style="font-size:13.5px;font-weight:600">${s.title}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${s.bidang} · ditinjau pada ${fmtDate(s.review_reminder_date)}</div>
+        </div>
+        ${chip}
+      </a>`;
+      })
+      .join("");
+  }
 })();

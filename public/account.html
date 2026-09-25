@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Akun Saya — Sistem SOP SMK Muhada</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="layout">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="serif">Akun Saya</h1>
+        <div class="sub">Ubah nama tampilan dan password akun Anda sendiri</div>
+      </div>
+    </div>
+
+    <form id="form" class="card" style="max-width:460px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)">
+        <div><strong style="color:var(--ink)">Email:</strong> <span id="info-email"></span></div>
+        <div><strong style="color:var(--ink)">Peran:</strong> <span id="info-role"></span></div>
+      </div>
+
+      <div class="field">
+        <label for="name">Nama</label>
+        <input id="name" required>
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:4px 0">
+
+      <div class="field">
+        <label for="current-password">Password Saat Ini</label>
+        <input id="current-password" type="password" required autocomplete="current-password">
+        <div style="font-size:11.5px;color:var(--muted)">Wajib diisi untuk mengonfirmasi perubahan apa pun di halaman ini.</div>
+      </div>
+      <div class="field">
+        <label for="new-password">Password Baru (opsional)</label>
+        <input id="new-password" type="password" minlength="8" autocomplete="new-password" placeholder="Kosongkan jika tidak diganti">
+      </div>
+
+      <div id="error" class="error-text" style="display:none"></div>
+      <div id="success" style="display:none;color:var(--hijau);font-size:13px;font-weight:600"></div>
+
+      <button type="submit" class="btn btn-primary" id="submit-btn">Simpan Perubahan</button>
+    </form>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/account.js"></script>
+</body>
+</html>

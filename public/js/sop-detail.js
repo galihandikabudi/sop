@@ -19,6 +19,7 @@
   const isOwnerOrAdmin = sop.created_by === user.id || user.role === "kepala_sekolah";
   const isDraft = sop.status === "draft";
   const isBerlaku = sop.status === "berlaku";
+  const canManageReminder = user.role === "kepala_sekolah" || (user.role === "waka" && user.bidang === sop.bidang);
   const topBadge = effectiveBadge(sop);
 
   function render() {
@@ -63,6 +64,21 @@
             <input type="checkbox" id="read-checkbox" style="width:17px;height:17px" ${sop.hasConfirmedRead ? "checked disabled" : ""}>
             ${sop.hasConfirmedRead ? "Sudah dikonfirmasi" : "Saya telah membaca SOP ini"}
           </label>
+        </div>` : ""}
+
+        ${isBerlaku && canManageReminder ? `
+        <div class="card" id="reminder-card">
+          <div style="font-weight:700;font-size:13.5px;margin-bottom:8px">Pengingat Peninjauan</div>
+          <div style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:10px">
+            Tandai tanggal untuk diingatkan meninjau ulang SOP ini. Tidak memengaruhi status berlaku.
+          </div>
+          <div class="field" style="margin-bottom:10px">
+            <input type="date" id="reminder-date" value="${sop.review_reminder_date || ""}">
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary" id="reminder-save-btn" style="flex:1;justify-content:center">Simpan</button>
+            ${sop.review_reminder_date ? `<button class="btn btn-danger" id="reminder-clear-btn">Hapus</button>` : ""}
+          </div>
         </div>` : ""}
 
         <div class="card">
@@ -178,6 +194,38 @@
         if (!readCheckbox.checked) return;
         readCheckbox.disabled = true;
         await api(`/sop/${id}/confirm-read`, { method: "POST" });
+      });
+    }
+
+    const reminderSaveBtn = document.getElementById("reminder-save-btn");
+    if (reminderSaveBtn) {
+      reminderSaveBtn.addEventListener("click", async () => {
+        const date = document.getElementById("reminder-date").value;
+        if (!date) {
+          alert("Pilih tanggal terlebih dahulu.");
+          return;
+        }
+        reminderSaveBtn.disabled = true;
+        try {
+          await api(`/sop/${id}/review-reminder`, { method: "PUT", body: JSON.stringify({ date }) });
+          window.location.reload();
+        } catch (err) {
+          alert(err.message);
+          reminderSaveBtn.disabled = false;
+        }
+      });
+    }
+    const reminderClearBtn = document.getElementById("reminder-clear-btn");
+    if (reminderClearBtn) {
+      reminderClearBtn.addEventListener("click", async () => {
+        reminderClearBtn.disabled = true;
+        try {
+          await api(`/sop/${id}/review-reminder`, { method: "PUT", body: JSON.stringify({ date: null }) });
+          window.location.reload();
+        } catch (err) {
+          alert(err.message);
+          reminderClearBtn.disabled = false;
+        }
       });
     }
 

@@ -12,6 +12,9 @@ const ACTION_LABEL = {
   user_create: "Membuat akun",
   user_update: "Mengubah akun",
   user_delete: "Menghapus akun",
+  account_update: "Mengubah akun sendiri",
+  review_reminder_set: "Menjadwalkan peninjauan",
+  review_reminder_clear: "Membatalkan pengingat peninjauan",
 };
 
 (async function () {

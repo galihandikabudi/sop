@@ -300,6 +300,77 @@ Baru: `lib/docNumber.js`, `migrations/005_doc_number.sql`
 
 Berubah: `schema.sql`, `functions/api/sop/[id]/approve.js`, `public/sop-print.html`, `public/js/sop-detail.js`
 
+## Pembaruan: Edit Akun Sendiri ("Akun Saya")
+
+Sebelumnya, satu-satunya cara mengubah data sebuah akun adalah lewat halaman
+**Pengguna** (khusus Kepala Sekolah, bisa mengedit siapa saja). Staf dan
+Waka tidak punya cara untuk mengganti password atau nama mereka sendiri
+sama sekali.
+
+Sekarang setiap orang yang login — Staf, Waka, maupun Kepala Sekolah —
+punya halaman **Akun Saya** (menu di sidebar, juga bisa diklik lewat kartu
+nama di pojok bawah sidebar) untuk mengubah **nama** dan **password**nya
+sendiri. Untuk keamanan, perubahan apa pun di halaman ini wajib
+mengonfirmasi dengan **password saat ini** terlebih dulu. Email, bidang,
+dan peran sengaja tidak bisa diubah dari sini — itu tetap hanya bisa lewat
+halaman Pengguna oleh Kepala Sekolah, supaya tidak ada yang bisa menaikkan
+hak aksesnya sendiri.
+
+### Berkas yang baru/berubah pada pembaruan ini
+
+Baru: `functions/api/account.js`, `public/account.html`, `public/js/account.js`
+
+Berubah: `public/js/sidebar.js`, `public/js/activity-log.js`
+
+## Pembaruan: Halaman Publik untuk Scan QR
+
+Sebelumnya, QR code di dokumen cetak mengarah ke `/sop-detail.html` yang
+mewajibkan login — jadi kalau ada orang luar (auditor, wali murid, tamu)
+memindai QR tersebut, mereka hanya akan diarahkan ke halaman login dan
+tidak bisa langsung melihat isi dokumennya.
+
+Sekarang QR mengarah ke halaman publik baru, **`/sop-public.html`**, yang
+bisa dibuka **tanpa login** oleh siapa saja. Halaman ini:
+- Hanya menampilkan SOP yang berstatus **"berlaku"** — draf, yang sedang ditinjau, atau yang ditolak tidak bisa diakses lewat sini sama sekali (selalu menampilkan "tidak ditemukan").
+- Menampilkan info yang memang dimaksudkan untuk dilihat publik saja: judul, nomor dokumen, bidang, versi, tanggal berlaku mulai, isi SOP, dan tiga nama tanda tangan (penyusun/pemeriksa/pengesah) — tidak ada komentar, log aktivitas, atau data akun.
+- Ada banner pengingat bahwa halaman ini selalu menampilkan revisi terbaru, jadi kalau ada salinan cetak yang berbeda isinya, halaman ini yang jadi acuan.
+- Ada tombol "Cetak halaman ini" (pakai print bawaan browser) buat yang mau menyimpan versi kertas sederhana; dokumen resmi ber-kop yang lengkap tetap lewat "Cetak / PDF" di halaman detail (perlu login) seperti biasa.
+
+### Berkas yang baru/berubah pada pembaruan ini
+
+Baru: `functions/api/public/sop/[id].js`, `public/sop-public.html`
+
+Berubah: `public/sop-print.html` (QR sekarang mengarah ke `/sop-public.html`, bukan `/sop-detail.html`)
+
+## Pembaruan: Pengingat Peninjauan Ulang (Opsional)
+
+Sesuai keputusan sebelumnya, SOP yang sudah "berlaku" tidak lagi punya
+tanggal kedaluwarsa paksa. Tapi kadang Kepala Sekolah/Waka tetap ingin
+diingatkan untuk meninjau ulang sebuah SOP di kemudian hari (mis. awal
+tahun ajaran baru) — tanpa membuatnya "kedaluwarsa" kalau lupa.
+
+Sekarang, di halaman detail sebuah SOP yang **berlaku**, Kepala Sekolah
+(untuk semua bidang) atau Waka (untuk bidang miliknya) akan melihat kartu
+**"Pengingat Peninjauan"** — bisa memilih tanggal untuk diingatkan, atau
+menghapus pengingat yang sudah dipasang. Ini murni pengingat: memasang atau
+membiarkannya kosong **tidak mengubah status atau keaktifan SOP** sama
+sekali.
+
+Saat tanggalnya sudah dekat (≤30 hari) atau sudah lewat, SOP tersebut
+otomatis muncul di kartu **"Pengingat Peninjauan"** pada halaman Beranda
+(kartu ini hanya muncul kalau memang ada yang perlu ditinjau).
+
+### Migrasi database yang perlu dijalankan
+
+Buka **D1 Console** → jalankan `migrations/006_review_reminder.sql` (satu baris: menambah kolom `review_reminder_date` ke tabel `sop`).
+
+### Berkas yang baru/berubah pada pembaruan ini
+
+Baru: `migrations/006_review_reminder.sql`, `functions/api/sop/[id]/review-reminder.js`
+
+Berubah: `schema.sql`, `functions/api/dashboard.js`, `public/js/dashboard.js`,
+`public/dashboard.html`, `public/js/sop-detail.js`, `public/js/activity-log.js`
+
 ## Fitur lain
 
 - **Format teks kaya**: kotak isi SOP (saat membuat/mengedit draft) mendukung

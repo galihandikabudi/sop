@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS sop (
   doc_number   TEXT,                -- Nomor dokumen resmi, mis. "003/SOP-KUR/SMK.MUHADA/IX/2026".
                                      -- Dibuat sekali saat pertama disahkan, tidak berubah lagi
                                      -- walau direvisi (lihat lib/docNumber.js).
+  review_reminder_date TEXT,        -- ISO date opsional; murni pengingat "tinjau lagi pada
+                                     -- tanggal ini", tidak memengaruhi status/keaktifan SOP.
   created_by   INTEGER NOT NULL REFERENCES users(id),
   preparer_name TEXT,               -- Nama Penyusun (defaults to created_by's name if blank)
   checker_name  TEXT,               -- Nama Pemeriksa

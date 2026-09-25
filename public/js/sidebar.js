@@ -58,14 +58,18 @@ async function renderSidebar() {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
         Log Aktivitas
       </a>` : ""}
+      <a href="/account.html" class="${isActive("/account.html")}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+        Akun Saya
+      </a>
     </nav>
-    <div class="user">
+    <a href="/account.html" class="user" style="text-decoration:none">
       <div class="avatar">${initials}</div>
       <div>
         <div class="name">${user.name}</div>
         <div class="role">${roleLabel}</div>
       </div>
-    </div>
+    </a>
     <button class="logout" id="logout-btn">Keluar</button>
   `;
 

@@ -70,7 +70,10 @@
     // breaks on already-printed/older documents.
     const year = sop.created_at ? new Date(sop.created_at).getFullYear() : new Date().getFullYear();
     const docNumber = sop.doc_number || `SOP/${String(sop.id).padStart(4, "0")}/SMK-MUHADA/${year}`;
-    const onlineUrl = `${window.location.origin}/sop-detail.html?id=${sop.id}`;
+    // Points at the public, no-login-required page so anyone scanning the
+    // printed document (not just logged-in staff) can immediately check
+    // they're reading the current version.
+    const onlineUrl = `${window.location.origin}/sop-public.html?id=${sop.id}`;
     const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=0&data=${encodeURIComponent(onlineUrl)}`;
 
     const approvalVersion = (sop.versions || []).find((v) => v.status === "berlaku");
