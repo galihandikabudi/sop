@@ -10,6 +10,8 @@ const ACTION_LABEL = {
   delete: "Menghapus",
   comment: "Berkomentar",
   user_create: "Membuat akun",
+  user_update: "Mengubah akun",
+  user_delete: "Menghapus akun",
 };
 
 (async function () {

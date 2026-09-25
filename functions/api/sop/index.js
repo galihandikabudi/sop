@@ -12,7 +12,7 @@ export async function onRequestGet({ request, env }) {
   const bidang = url.searchParams.get("bidang");
   const q = url.searchParams.get("q");
 
-  let sql = `SELECT s.id, s.title, s.bidang, s.version, s.status, s.valid_until,
+  let sql = `SELECT s.id, s.title, s.bidang, s.version, s.status, s.valid_from,
                     s.created_by, s.updated_at, u.name AS created_by_name
              FROM sop s JOIN users u ON u.id = s.created_by
              WHERE 1=1`;

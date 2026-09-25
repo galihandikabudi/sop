@@ -54,8 +54,9 @@
         </div>
         <a href="/sop-detail.html?id=${detail.id}" class="btn btn-secondary" style="justify-content:center">Baca dokumen lengkap</a>
         <div class="field">
-          <label for="valid-until">Berlaku sampai</label>
-          <input type="date" id="valid-until">
+          <label for="valid-from">Berlaku mulai</label>
+          <input type="date" id="valid-from" value="${new Date().toISOString().slice(0, 10)}">
+          <div style="font-size:11.5px;color:var(--muted)">Tanggal efektif SOP ini mulai berlaku. Tidak ada tanggal kedaluwarsa — versi ini akan tetap aktif sampai digantikan versi yang lebih baru.</div>
         </div>
         <div class="field">
           <label for="note">Catatan (wajib jika menolak)</label>
@@ -82,7 +83,7 @@
         await api(`/sop/${selectedId}/approve`, {
           method: "POST",
           body: JSON.stringify({
-            valid_until: document.getElementById("valid-until").value || undefined,
+            valid_from: document.getElementById("valid-from").value || undefined,
             note: document.getElementById("note").value || undefined,
           }),
         });

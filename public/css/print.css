@@ -41,7 +41,6 @@ body {
 .doc-school-name { font-weight: 700; font-size: 14px; letter-spacing: .01em; }
 .doc-school-sub { font-size: 11.5px; color: #5B6663; margin-top: 3px; }
 .doc-title {
-  font-family: 'Source Serif 4', Georgia, serif;
   font-size: 13.5px;
   font-weight: 600;
   text-transform: uppercase;
@@ -74,9 +73,9 @@ body {
 .doc-header-qr .qr-caption { font-size: 8.5px; color: #5B6663; line-height: 1.3; }
 
 .sop-title-line {
-  font-family: 'Source Serif 4', Georgia, serif;
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: .01em;
   text-align: center;
   margin: 18px 0 26px;
 }
@@ -85,9 +84,8 @@ body {
 .sop-heading {
   display: block;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 15px;
   margin: 16px 0 8px;
-  font-family: 'Source Serif 4', Georgia, serif;
 }
 
 .sign-grid {

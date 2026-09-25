@@ -1,6 +1,15 @@
-// POST /api/sop/:id/approve  { valid_until?, note? } — Kepala Sekolah only
+// POST /api/sop/:id/approve  { valid_from?, note? } — Kepala Sekolah only
+//
+// Mengesahkan SOP: menaikkan versi dan mencatat `valid_from` (tanggal mulai
+// berlaku). Tidak ada tanggal kedaluwarsa — versi ini dianggap tetap aktif
+// selama belum ada versi baru yang mengesahkan ulang SOP yang sama.
+//
+// Nomor dokumen resmi (`doc_number`) dibuat sekali saja, pada pengesahan
+// PERTAMA — revisi berikutnya (naik versi) tidak mengubah nomor ini, hanya
+// versinya yang bertambah.
 import { getSessionUser, json, unauthorized, forbidden } from "../../../../lib/auth.js";
 import { logActivity } from "../../../../lib/log.js";
+import { generateDocNumber } from "../../../../lib/docNumber.js";
 
 function bumpVersion(version) {
   const [major, minor = "0"] = String(version).split(".");
@@ -19,15 +28,19 @@ export async function onRequestPost({ request, env, params }) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const validUntil =
-    body.valid_until ||
-    new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  // Default: berlaku efektif sejak hari ini (tanggal pengesahan). Kepala
+  // Sekolah tetap bisa menetapkan tanggal efektif lain (mis. berlaku mulai
+  // awal semester depan) lewat field valid_from di form persetujuan.
+  const validFrom = body.valid_from || new Date().toISOString().slice(0, 10);
   const newVersion = bumpVersion(sop.version);
 
+  // Nomor dokumen hanya dibuat sekali, saat pertama kali disahkan.
+  const docNumber = sop.doc_number || (await generateDocNumber(env, sop.bidang, validFrom));
+
   await env.DB.prepare(
-    `UPDATE sop SET status = 'berlaku', version = ?, valid_until = ?, updated_at = datetime('now')
+    `UPDATE sop SET status = 'berlaku', version = ?, valid_from = ?, doc_number = ?, updated_at = datetime('now')
      WHERE id = ?`
-  ).bind(newVersion, validUntil, sop.id).run();
+  ).bind(newVersion, validFrom, docNumber, sop.id).run();
 
   await env.DB.prepare(
     `INSERT INTO sop_versions (sop_id, version, content, status, note, actor_id)
@@ -40,8 +53,8 @@ export async function onRequestPost({ request, env, params }) {
     action: "approve",
     entityType: "sop",
     entityId: sop.id,
-    detail: `Mengesahkan "${sop.title}" (v${newVersion}, berlaku s.d. ${validUntil})`,
+    detail: `Mengesahkan "${sop.title}" (${docNumber}, v${newVersion}, berlaku mulai ${validFrom})`,
   });
 
-  return json({ ok: true, version: newVersion, valid_until: validUntil });
+  return json({ ok: true, version: newVersion, valid_from: validFrom, doc_number: docNumber });
 }

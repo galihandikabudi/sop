@@ -27,7 +27,7 @@
         <td style="color:var(--muted)">${s.bidang}</td>
         <td style="color:var(--muted)">v${s.version}</td>
         <td><span class="badge badge-${badge.cls}">${badge.label}</span></td>
-        <td style="color:var(--muted)">${fmtDate(s.valid_until)}</td>
+        <td style="color:var(--muted)">${fmtDate(s.valid_from)}</td>
         <td style="color:var(--muted)">${fmtDate(s.updated_at)}</td>
         <td style="text-align:right">${
           canDelete

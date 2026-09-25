@@ -26,7 +26,12 @@ CREATE TABLE IF NOT EXISTS sop (
   version      TEXT NOT NULL DEFAULT '1.0',
   status       TEXT NOT NULL DEFAULT 'draft'
                CHECK (status IN ('draft', 'menunggu_review', 'menunggu_persetujuan', 'berlaku', 'ditolak', 'kedaluwarsa')),
-  valid_until  TEXT,                -- ISO date; NULL until disahkan
+  valid_from   TEXT,                -- ISO date; tanggal mulai berlaku, diisi saat disahkan.
+                                     -- Tidak ada tanggal kedaluwarsa: sebuah versi tetap
+                                     -- aktif selama belum digantikan versi yang lebih baru.
+  doc_number   TEXT,                -- Nomor dokumen resmi, mis. "003/SOP-KUR/SMK.MUHADA/IX/2026".
+                                     -- Dibuat sekali saat pertama disahkan, tidak berubah lagi
+                                     -- walau direvisi (lihat lib/docNumber.js).
   created_by   INTEGER NOT NULL REFERENCES users(id),
   preparer_name TEXT,               -- Nama Penyusun (defaults to created_by's name if blank)
   checker_name  TEXT,               -- Nama Pemeriksa
@@ -69,6 +74,14 @@ CREATE TABLE IF NOT EXISTS activity_log (
   entity_id   INTEGER,
   detail      TEXT,
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Penghitung urut nomor dokumen, per bidang per tahun (lihat lib/docNumber.js).
+CREATE TABLE IF NOT EXISTS doc_number_counters (
+  bidang    TEXT NOT NULL,
+  year      INTEGER NOT NULL,
+  last_seq  INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (bidang, year)
 );
 
 CREATE INDEX IF NOT EXISTS idx_sop_status ON sop(status);

@@ -199,6 +199,107 @@ Baru: `migrations/003_add_preparer_checker_names.sql`, `public/css/print.css`
 Berubah: `schema.sql`, `functions/api/sop/index.js`, `functions/api/sop/[id].js`,
 `public/sop-new.html`, `public/js/sop-detail.js`, `public/sop-print.html`
 
+## Pembaruan: Edit/Hapus Pengguna, Font Cetak Konsisten, Tampilan Baru
+
+**1. Edit & hapus akun pengguna** — di halaman **Pengguna**, setiap baris kini
+punya tombol **Edit** (ubah nama, email, bidang, peran, dan boleh mengatur
+password baru — kosongkan kalau tidak mau ganti password) dan **Hapus**.
+Ada pengaman bawaan: akun sendiri tidak bisa dihapus dari sini, dan akun
+Kepala Sekolah terakhir tidak bisa dihapus/diturunkan perannya supaya tidak
+ada yang terkunci dari akses admin. Perubahan/penghapusan akun tercatat di
+Log Aktivitas.
+
+Tidak perlu migrasi database baru untuk fitur ini — hanya endpoint API dan
+tampilan.
+
+**2. Font di cetak/PDF sekarang konsisten** — sebelumnya bagian judul di
+header dokumen cetak memakai font serif (Source Serif 4) sedangkan bagian
+isi lainnya memakai font biasa (Public Sans), sehingga terlihat beda. Semua
+bagian dokumen cetak (header, judul SOP, isi, tanda tangan) sekarang
+memakai satu keluarga font yang sama; pembeda antar bagian cukup dari tebal
+dan ukuran huruf, bukan jenis fontnya.
+
+**3. Tampilan aplikasi mengikuti gaya SPP Muhada** — mulai dari halaman
+login, skema warna dan jenis font aplikasi ini diseragamkan dengan aplikasi
+SPP Muhada (Sistem Pembayaran): biru tua/biru terang sebagai warna utama,
+oranye sebagai warna aksen, font **Montserrat** untuk judul/heading dan
+**Inter** untuk teks isi. **Susunan/layout tiap halaman tidak diubah** —
+sidebar, kartu, tabel, dan alur kerja tetap sama seperti sebelumnya, hanya
+warna dan font yang berganti. Dokumen hasil cetak/PDF (`sop-print.html`)
+sengaja **tidak** ikut diubah warnanya — tetap memakai gaya dokumen resmi
+hitam-putih formal agar rapi saat dicetak di atas kertas.
+
+### Berkas yang baru/berubah pada pembaruan ini
+
+Baru: `functions/api/users/[id].js`
+
+Berubah: `public/users.html`, `public/js/users.js`, `public/js/activity-log.js`,
+`public/css/print.css`, `public/css/style.css`, `public/index.html`,
+`public/js/dashboard.js`, `public/js/sop-detail.js`, dan tag Google Fonts di
+semua halaman `public/*.html` kecuali `sop-print.html`.
+
+## Pembaruan: "Berlaku Mulai" (tanpa tanggal kedaluwarsa)
+
+Sebelumnya, saat mengesahkan SOP, Kepala Sekolah mengisi tanggal **"Berlaku
+sampai"** dan sistem menandai SOP sebagai "Perlu Ditinjau"/"Kedaluwarsa"
+saat tanggal itu mendekat/lewat. Sekarang konsepnya diubah: field itu
+menjadi **"Berlaku mulai"** (tanggal efektif), dan **tidak ada lagi tanggal
+kedaluwarsa** — sebuah versi SOP yang sudah disahkan otomatis tetap
+dianggap aktif selama belum digantikan oleh versi yang lebih baru
+(pengesahan ulang). Ini sesuai alur kerja yang sebenarnya: SOP tidak
+"habis masa berlaku" begitu saja, ia berlaku sampai direvisi.
+
+Yang berubah:
+- Form persetujuan (`Persetujuan`) — field diganti jadi **"Berlaku mulai"**, terisi otomatis dengan tanggal hari ini, bisa diubah kalau SOP memang baru efektif di tanggal lain (mis. awal semester depan).
+- Kolom `valid_until` di database berganti nama jadi `valid_from` (lihat migrasi di bawah).
+- Badge "Perlu Ditinjau"/"Kedaluwarsa" yang berbasis hitung mundur tanggal dihapus — badge kini murni mengikuti status SOP (Draft/Menunggu Review/Menunggu ACC/Berlaku/Ditolak).
+- Di Beranda, kartu "Perlu Ditinjau Ulang" dan daftar "Perlu Ditinjau Segera" diganti dengan kartu **"Draft Belum Diajukan"** dan daftar **"SOP Aktif Terlama"** (informasional — menunjukkan SOP aktif yang paling lama belum direvisi, tanpa tenggat/peringatan).
+
+### Migrasi database yang perlu dijalankan
+
+Buka **D1 Console** → jalankan file `migrations/004_valid_until_to_valid_from.sql` (isinya cuma satu baris `ALTER TABLE sop RENAME COLUMN valid_until TO valid_from;`, D1 mendukung ini langsung tanpa perlu bongkar-pasang tabel seperti migrasi sebelumnya).
+
+### Berkas yang baru/berubah pada pembaruan ini
+
+Baru: `migrations/004_valid_until_to_valid_from.sql`
+
+Berubah: `schema.sql`, `functions/api/sop/[id]/approve.js`, `functions/api/sop/index.js`,
+`functions/api/dashboard.js`, `public/js/api.js`, `public/js/dashboard.js`,
+`public/js/sop-list.js`, `public/js/sop-detail.js`, `public/js/approvals.js`,
+`public/sop-list.html`, `public/dashboard.html`, `public/sop-print.html`.
+
+## Pembaruan: Nomor Dokumen Resmi yang Sistematis
+
+Sebelumnya nomor dokumen di lembar cetak (`SOP/0007/SMK-MUHADA/2026`) memakai
+ID baris database — nomornya bisa bolong (draf yang ditolak/dihapus tetap
+"memakai" satu angka) dan tidak menunjukkan bidang mana yang menerbitkannya.
+
+Sekarang setiap SOP mendapat **nomor dokumen resmi** dengan format:
+
+```
+{urut 3 digit}/SOP-{KODE BIDANG}/SMK.MUHADA/{bulan romawi}/{tahun}
+Contoh: 003/SOP-KUR/SMK.MUHADA/IX/2026
+```
+
+Aturannya:
+- **Nomor baru dibuat hanya saat SOP pertama kali disahkan** (bukan saat draf dibuat) — jadi draf yang ditolak/dihapus tidak membuat nomor bolong.
+- **Nomor bersifat permanen**: kalau SOP itu direvisi lagi di kemudian hari (naik versi), nomornya tidak berubah — hanya versinya (mis. v2.0) yang bertambah.
+- **Urutan direset per bidang, per tahun** — tiap bidang mulai dari 001 lagi setiap tahun baru, tidak bercampur dengan bidang lain.
+- Kode bidang: KUR (Kurikulum), KES (Kesiswaan), SARPRAS (Sarana & Prasarana), OTO (Kaprodi TKR/TO), AKL (Kaprodi AKL), BKK, TU (Tata Usaha), BEN (Bendahara Sekolah), PUB (Publikasi). Bisa diubah di `lib/docNumber.js` (objek `BIDANG_CODE`) kalau ada nama bidang baru.
+- SOP yang sudah disahkan **sebelum** pembaruan ini tidak dinomori ulang — di lembar cetak, dokumen tersebut otomatis memakai nomor gaya lama sebagai cadangan, supaya dokumen yang sudah pernah dicetak/diedarkan tidak berubah nomornya.
+
+Nomor dokumen ini juga ditampilkan di halaman detail SOP (untuk SOP yang sudah berlaku) dan di lembar cetak/PDF.
+
+### Migrasi database yang perlu dijalankan
+
+Buka **D1 Console** → jalankan `migrations/005_doc_number.sql` (dua pernyataan: menambah kolom `doc_number` ke tabel `sop`, dan membuat tabel `doc_number_counters` untuk penghitung urut per bidang per tahun).
+
+### Berkas yang baru/berubah pada pembaruan ini
+
+Baru: `lib/docNumber.js`, `migrations/005_doc_number.sql`
+
+Berubah: `schema.sql`, `functions/api/sop/[id]/approve.js`, `public/sop-print.html`, `public/js/sop-detail.js`
+
 ## Fitur lain
 
 - **Format teks kaya**: kotak isi SOP (saat membuat/mengedit draft) mendukung

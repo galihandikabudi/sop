@@ -1,4 +1,9 @@
 // GET /api/dashboard — summary numbers for the Beranda page
+//
+// SOP yang sudah "berlaku" tidak punya tanggal kedaluwarsa — statistik di
+// sini karena itu tidak lagi menghitung "akan kedaluwarsa", melainkan
+// menyoroti SOP aktif yang paling lama belum direvisi (informasional saja,
+// bukan peringatan/tenggat).
 import { getSessionUser, json, unauthorized } from "../../lib/auth.js";
 
 export async function onRequestGet({ request, env }) {
@@ -13,19 +18,18 @@ export async function onRequestGet({ request, env }) {
   ).bind(...bind).first();
 
   const menunggu = await env.DB.prepare(
-    `SELECT COUNT(*) AS n FROM sop ${scope ? scope + " AND" : "WHERE"} status = 'menunggu_persetujuan'`
+    `SELECT COUNT(*) AS n FROM sop ${scope ? scope + " AND" : "WHERE"} status IN ('menunggu_review', 'menunggu_persetujuan')`
   ).bind(...bind).first();
 
-  const perluDitinjau = await env.DB.prepare(
-    `SELECT COUNT(*) AS n FROM sop ${scope ? scope + " AND" : "WHERE"} status = 'berlaku'
-     AND valid_until IS NOT NULL AND julianday(valid_until) - julianday('now') < 30`
+  const draft = await env.DB.prepare(
+    `SELECT COUNT(*) AS n FROM sop ${scope ? scope + " AND" : "WHERE"} status = 'draft'`
   ).bind(...bind).first();
 
-  const { results: akanKedaluwarsa } = await env.DB.prepare(
-    `SELECT id, title, bidang, valid_until
+  const { results: aktifTerlama } = await env.DB.prepare(
+    `SELECT id, title, bidang, valid_from
      FROM sop
-     ${scope ? scope + " AND" : "WHERE"} status = 'berlaku' AND valid_until IS NOT NULL
-     ORDER BY valid_until ASC LIMIT 6`
+     ${scope ? scope + " AND" : "WHERE"} status = 'berlaku' AND valid_from IS NOT NULL
+     ORDER BY valid_from ASC LIMIT 6`
   ).bind(...bind).all();
 
   const { results: perBidang } = await env.DB.prepare(
@@ -39,8 +43,8 @@ export async function onRequestGet({ request, env }) {
   return json({
     totalBerlaku: totalBerlaku.n,
     menunggu: menunggu.n,
-    perluDitinjau: perluDitinjau.n,
-    akanKedaluwarsa,
+    draft: draft.n,
+    aktifTerlama,
     perBidang,
   });
 }

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pengguna — Sistem SOP SMK Muhada</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -21,18 +21,19 @@
     <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start">
       <div class="card" style="padding:0;overflow:hidden">
         <table>
-          <thead><tr><th>Nama</th><th>Email</th><th>Bidang</th><th>Peran</th></tr></thead>
+          <thead><tr><th>Nama</th><th>Email</th><th>Bidang</th><th>Peran</th><th style="text-align:right">Aksi</th></tr></thead>
           <tbody id="rows"></tbody>
         </table>
       </div>
 
       <form id="form" class="card" style="display:flex;flex-direction:column;gap:14px">
-        <div style="font-weight:700;font-size:15px">Tambah Akun</div>
+        <div style="font-weight:700;font-size:15px" id="form-title">Tambah Akun</div>
         <div class="field">
           <label for="role">Peran</label>
           <select id="role" required>
             <option value="staff">Staf (mengajukan &amp; membaca SOP)</option>
             <option value="waka">Waka Bidang (meninjau sebelum ke Kepala Sekolah)</option>
+            <option value="kepala_sekolah">Kepala Sekolah (admin)</option>
           </select>
         </div>
         <div class="field">
@@ -43,16 +44,19 @@
           <label for="email">Email</label>
           <input id="email" type="email" required>
         </div>
-        <div class="field">
+        <div class="field" id="bidang-field">
           <label for="bidang">Bidang</label>
           <select id="bidang" required></select>
         </div>
         <div class="field">
-          <label for="password">Password Awal</label>
-          <input id="password" type="password" required minlength="8">
+          <label for="password" id="password-label">Password Awal</label>
+          <input id="password" type="password" minlength="8">
         </div>
         <div id="error" class="error-text" style="display:none"></div>
-        <button type="submit" class="btn btn-primary">Buat Akun</button>
+        <div style="display:flex;gap:10px">
+          <button type="submit" class="btn btn-primary" id="submit-btn" style="flex:1">Buat Akun</button>
+          <button type="button" class="btn" id="cancel-edit-btn" style="display:none">Batal</button>
+        </div>
       </form>
     </div>
   </div>

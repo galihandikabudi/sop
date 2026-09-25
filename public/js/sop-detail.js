@@ -19,7 +19,6 @@
   const isOwnerOrAdmin = sop.created_by === user.id || user.role === "kepala_sekolah";
   const isDraft = sop.status === "draft";
   const isBerlaku = sop.status === "berlaku";
-  const daysLeftVal = daysLeft(sop.valid_until);
   const topBadge = effectiveBadge(sop);
 
   function render() {
@@ -33,21 +32,13 @@
           <div>
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
               <span class="badge badge-${topBadge.cls}">${topBadge.label}</span>
-              <span style="color:var(--muted);font-size:12.5px">Versi ${sop.version}${sop.valid_until ? " · berlaku s.d. " + fmtDate(sop.valid_until) : ""}</span>
+              <span style="color:var(--muted);font-size:12.5px">Versi ${sop.version}${sop.valid_from ? " · berlaku mulai " + fmtDate(sop.valid_from) : ""}</span>
             </div>
             <h1 class="serif" style="margin:0;font-size:24px;font-weight:600;max-width:520px">${sop.title}</h1>
-            <div style="color:var(--muted);font-size:13px;margin-top:6px">Bidang ${sop.bidang} · Dibuat oleh ${sop.created_by_name}</div>
+            <div style="color:var(--muted);font-size:13px;margin-top:6px">Bidang ${sop.bidang} · Dibuat oleh ${sop.created_by_name}${sop.doc_number ? ` · No. Dokumen: <span style="font-weight:600">${sop.doc_number}</span>` : ""}</div>
           </div>
           <div style="display:flex;gap:8px;flex-shrink:0" id="actions"></div>
         </div>
-
-        ${isBerlaku && daysLeftVal !== null && daysLeftVal < 30 ? `
-        <div class="card" style="background:#FBF6EC;border-color:#F0DEBF">
-          <div style="font-weight:700;font-size:13.5px;color:var(--warn-text)">Perlu ditinjau ulang</div>
-          <div style="font-size:12.5px;color:var(--muted);margin-top:4px">
-            ${daysLeftVal <= 0 ? "Masa berlaku dokumen ini sudah lewat." : `Masa berlaku berakhir dalam ${daysLeftVal} hari.`}
-          </div>
-        </div>` : ""}
 
         <div class="card" id="body-card"></div>
 

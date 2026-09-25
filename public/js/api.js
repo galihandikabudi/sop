@@ -37,7 +37,6 @@ const STATUS_LABEL = {
   menunggu_persetujuan: "Menunggu ACC",
   berlaku: "Berlaku",
   ditolak: "Ditolak",
-  kedaluwarsa: "Kedaluwarsa",
 };
 
 const BIDANG_LIST = [
@@ -52,20 +51,19 @@ const BIDANG_LIST = [
   "Publikasi",
 ];
 
-function daysLeft(validUntil) {
-  if (!validUntil) return null;
-  return Math.ceil((new Date(validUntil) - new Date()) / (1000 * 60 * 60 * 24));
+// Selisih hari dari sebuah tanggal ke hari ini. Dulu dipakai untuk hitung
+// mundur ke tanggal kedaluwarsa; sekarang dipakai untuk hitung "sudah
+// berapa lama" sebuah SOP berlaku (murni informasi, bukan peringatan) —
+// nilainya negatif untuk tanggal di masa lalu.
+function daysLeft(dateStr) {
+  if (!dateStr) return null;
+  return Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
 }
 
-// Mirrors the visual language from the design mockup: an SOP that's still
-// "berlaku" but close to (or past) its expiry date shows an orange/red
-// warning badge instead of a plain green "Berlaku" badge.
+// Sebuah SOP yang berlaku tidak punya tanggal kedaluwarsa — ia tetap aktif
+// selama belum digantikan versi yang lebih baru, jadi badge cukup
+// mencerminkan status apa adanya.
 function effectiveBadge(sop) {
-  if (sop.status === "berlaku" && sop.valid_until) {
-    const d = daysLeft(sop.valid_until);
-    if (d < 0) return { cls: "kedaluwarsa", label: "Kedaluwarsa" };
-    if (d < 30) return { cls: "review", label: "Perlu Ditinjau" };
-  }
   return { cls: sop.status, label: STATUS_LABEL[sop.status] || sop.status };
 }
 
