@@ -21,10 +21,25 @@
   .pagedjs_page {
     background: #fff; box-shadow: 0 2px 16px rgba(0,0,0,.15); margin: 0 !important;
   }
+
+  /* Safari/WebKit (macOS & iOS) prints backgrounds using its own
+     "economy" heuristic instead of exactly what's declared, unless told
+     otherwise — this is why the gray preview backdrop below can bleed
+     into the actual printed/PDF-exported page even though the on-screen
+     preview looks fine and Chrome prints it correctly. Forcing
+     print-color-adjust: exact makes WebKit render backgrounds exactly as
+     specified here, and the @media print rules below make everything
+     that isn't the page content itself explicitly white. */
+  html, body, #paged-container, .pagedjs_pages, .pagedjs_page {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   @media print {
-    body { background: #fff; }
+    html, body { background: #fff !important; }
+    #paged-container, .pagedjs_pages, .pagedjs_page { background: #fff !important; }
     .no-print { display: none !important; }
-    .pagedjs_pages { gap: 0; }
+    .pagedjs_pages { gap: 0 !important; }
     .pagedjs_page { box-shadow: none !important; }
   }
 </style>
@@ -70,6 +85,17 @@
     // breaks on already-printed/older documents.
     const year = sop.created_at ? new Date(sop.created_at).getFullYear() : new Date().getFullYear();
     const docNumber = sop.doc_number || `SOP/${String(sop.id).padStart(4, "0")}/SMK-MUHADA/${year}`;
+
+    // Browsers name a "Save as PDF" file after document.title, so set it
+    // to "{nomor}-{kode bidang} {judul}" (e.g. "001-KES SOP Penanganan
+    // Murid Terlambat") before printing, instead of the generic page title.
+    (function setPrintFileName() {
+      const m = docNumber.match(/^(\d+)\/SOP-([A-Z0-9]+)\//);
+      const seq = m ? m[1] : String(sop.id).padStart(3, "0");
+      const code = m ? m[2] : String(sop.bidang || "UMUM").slice(0, 3).toUpperCase();
+      const safeTitle = String(sop.title || "").replace(/[\\/:*?"<>|]/g, "-").trim();
+      document.title = `${seq}-${code} ${safeTitle}`;
+    })();
     // Points at the public, no-login-required page so anyone scanning the
     // printed document (not just logged-in staff) can immediately check
     // they're reading the current version.

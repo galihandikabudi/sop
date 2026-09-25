@@ -22,6 +22,9 @@ body {
   font-family: 'Public Sans', system-ui, sans-serif;
   color: #1C2321;
   font-size: 13px;
+  background: #fff;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .doc-header {

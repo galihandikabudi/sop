@@ -437,6 +437,35 @@ membuka jalan untuk laporan "standar mana yang sudah/belum didukung SOP",
 yang biasanya jadi salah satu bukti dokumen paling dicari saat akreditasi
 atau audit mutu. Kalau tertarik, saya bisa langsung buatkan.
 
+## Pembaruan: Nama File PDF & Perbaikan Print di Perangkat Apple
+
+**1. Nama file saat "Simpan sebagai PDF"** — browser menamai file PDF
+sesuai judul halaman (`document.title`) saat tombol print/simpan diklik.
+Sekarang halaman cetak SOP otomatis mengatur judul itu ke format
+**"{nomor}-{kode bidang} {judul SOP}"**, misalnya:
+
+```
+001-KES SOP Penanganan Murid Terlambat
+```
+
+Kalau SOP tersebut belum punya nomor dokumen resmi (disahkan sebelum fitur
+penomoran ada), sistem otomatis memakai ID SOP dan kode bidang sebagai
+gantinya, supaya nama filenya tetap masuk akal.
+
+**2. Perbaikan tampilan cetak di perangkat Apple (Safari/iOS/macOS)** —
+Safari punya cara berbeda dari Chrome dalam menentukan warna latar yang
+ikut dicetak: kalau tidak ditegaskan, Safari bisa membuat backdrop
+abu-abu/krem di balik halaman (yang di layar cuma jadi bingkai preview)
+ikut tercetak atau muncul di PDF, padahal di Chrome sudah benar putih
+bersih. Sekarang ditambahkan aturan `print-color-adjust: exact` dan
+latar putih tegas untuk semua elemen pembungkus halaman, khusus untuk
+perangkat Apple, supaya hasil cetak/PDF-nya konsisten sama dengan preview
+di layar — bukan cuma cocok di Chrome.
+
+### Berkas yang berubah pada pembaruan ini
+
+`public/sop-print.html`, `public/css/print.css`
+
 ## Fitur lain
 
 - **Format teks kaya**: kotak isi SOP (saat membuat/mengedit draft) mendukung
