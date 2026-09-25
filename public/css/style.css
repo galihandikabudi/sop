@@ -151,11 +151,13 @@ tbody tr:last-child td { border-bottom: none; }
 tbody tr { cursor: pointer; }
 tbody tr:hover { background: #F8F9FC; }
 
-.field { display: flex; flex-direction: column; gap: 6px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .field label { font-size: 13px; font-weight: 600; }
 .field input, .field select, .field textarea {
   border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;
+  width: 100%; box-sizing: border-box; min-width: 0;
 }
+.field select { text-overflow: ellipsis; }
 .field textarea { resize: vertical; }
 
 .editor-toolbar { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
