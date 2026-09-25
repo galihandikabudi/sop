@@ -34,7 +34,9 @@
         </div>
         <div class="field">
           <label for="checker_name">Nama Pemeriksa</label>
-          <input id="checker_name" placeholder="mis. Waka terkait">
+          <select id="checker_name">
+            <option value="">— Pilih Pemeriksa —</option>
+          </select>
         </div>
       </div>
       <div class="field">
@@ -75,6 +77,22 @@
     bidangSelect.disabled = true;
   }
   document.getElementById("preparer_name").value = user.name;
+
+  // "Nama Pemeriksa" adalah dropdown berisi akun yang terdaftar di bidang
+  // yang sama dengan SOP ini (bukan lagi ketik bebas) — daftar diambil
+  // dari /api/users/directory, yang bisa diakses semua peran (bukan cuma
+  // Kepala Sekolah seperti /api/users).
+  const checkerSelect = document.getElementById("checker_name");
+  const directory = await api("/users/directory");
+  function refreshCheckerOptions() {
+    const currentBidang = bidangSelect.value;
+    const candidates = directory.filter((u) => u.bidang === currentBidang && u.id !== user.id);
+    checkerSelect.innerHTML =
+      `<option value="">— Pilih Pemeriksa —</option>` +
+      candidates.map((u) => `<option value="${u.name}">${u.name}</option>`).join("");
+  }
+  refreshCheckerOptions();
+  bidangSelect.addEventListener("change", refreshCheckerOptions);
 
   const contentEl = document.getElementById("content");
   const toolbarEl = document.getElementById("toolbar");

@@ -113,7 +113,9 @@
           </div>
           <div class="field">
             <label for="checker_name">Nama Pemeriksa</label>
-            <input id="checker_name" value="${sop.checker_name || ""}" placeholder="mis. Waka terkait">
+            <select id="checker_name">
+              <option value="">— Pilih Pemeriksa —</option>
+            </select>
           </div>
         </div>
         <div class="field">
@@ -129,6 +131,23 @@
       const editToolbar = document.getElementById("edit-toolbar");
       editToolbar.innerHTML = richEditorToolbarHtml();
       wireRichEditorToolbar(editToolbar, editEl);
+
+      // Isi dropdown Nama Pemeriksa dari akun terdaftar di bidang yang
+      // sama. Kalau nilai yang tersimpan sekarang (mis. dari data lama,
+      // atau orang itu sudah tidak terdaftar) tidak ada di daftar, tetap
+      // ditambahkan sebagai opsi supaya data yang sudah ada tidak hilang.
+      api("/users/directory").then((directory) => {
+        const checkerSelect = document.getElementById("checker_name");
+        if (!checkerSelect) return;
+        const candidates = directory.filter((u) => u.bidang === sop.bidang);
+        const current = sop.checker_name || "";
+        const hasCurrent = !current || candidates.some((u) => u.name === current);
+        checkerSelect.innerHTML =
+          `<option value="">— Pilih Pemeriksa —</option>` +
+          (hasCurrent ? "" : `<option value="${current}">${current} (tidak terdaftar)</option>`) +
+          candidates.map((u) => `<option value="${u.name}">${u.name}</option>`).join("");
+        checkerSelect.value = current;
+      });
 
       document.getElementById("save-btn").addEventListener("click", async () => {
         await api(`/sop/${id}`, {

@@ -466,6 +466,25 @@ di layar — bukan cuma cocok di Chrome.
 
 `public/sop-print.html`, `public/css/print.css`
 
+## Pembaruan: Nama Pemeriksa Jadi Dropdown
+
+Field **"Nama Pemeriksa"** di halaman **Ajukan SOP Baru** (dan saat
+mengedit draf di halaman detail SOP) sekarang berupa **dropdown** berisi
+akun-akun yang terdaftar di bidang yang sama dengan SOP tersebut —
+bukan lagi ketik bebas. Daftarnya ikut berubah otomatis kalau Kepala
+Sekolah memilih bidang lain saat membuat SOP.
+
+Kalau sebuah draf lama sudah punya nama pemeriksa yang, misalnya, akunnya
+sudah dihapus atau namanya beda dari daftar terkini, nama itu tetap
+muncul sebagai pilihan (ditandai "tidak terdaftar") supaya data yang
+sudah ada tidak hilang begitu saja.
+
+### Berkas yang baru/berubah pada pembaruan ini
+
+Baru: `functions/api/users/directory.js`
+
+Berubah: `public/sop-new.html`, `public/js/sop-detail.js`
+
 ## Fitur lain
 
 - **Format teks kaya**: kotak isi SOP (saat membuat/mengedit draft) mendukung
