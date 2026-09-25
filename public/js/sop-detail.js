@@ -104,6 +104,12 @@
 
     // Body: rich editor if draft & owner, else read-only rich content
     const bodyCard = document.getElementById("body-card");
+    // Set below when in draft-edit mode, so "Ajukan Persetujuan" can save
+    // whatever's currently in the Nama Penyusun/Pemeriksa fields first —
+    // otherwise picking a Pemeriksa and immediately clicking "Ajukan
+    // Persetujuan" (without a separate "Simpan Perubahan" first) would
+    // submit with the OLD saved value and wrongly say Pemeriksa is empty.
+    let persistDraftFields = null;
     if (isDraft && isOwnerOrAdmin) {
       bodyCard.innerHTML = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
@@ -116,6 +122,7 @@
             <select id="checker_name">
               <option value="">— Pilih Pemeriksa —</option>
             </select>
+            <div id="checker-hint" style="font-size:11.5px;color:var(--muted);display:none">Wajib diisi — Waka lain atau Kepala Sekolah</div>
           </div>
         </div>
         <div class="field">
@@ -145,8 +152,8 @@
         const creatorInfo = directory.find((u) => u.id === sop.created_by);
         const creatorIsWaka = creatorInfo && creatorInfo.role === "waka";
         if (creatorIsWaka) {
-          const checkerLabel = document.querySelector('label[for="checker_name"]');
-          if (checkerLabel) checkerLabel.textContent = "Nama Pemeriksa (wajib — Waka lain atau Kepala Sekolah)";
+          const checkerHint = document.getElementById("checker-hint");
+          if (checkerHint) checkerHint.style.display = "block";
         }
         // Kalau pembuat SOP-nya seorang Waka, Waka bidang LAIN pun boleh
         // jadi Pemeriksa (bukan cuma Waka bidang yang sama, yang biasanya
@@ -173,9 +180,9 @@
         checkerSelect.value = hasCurrentId && currentId ? String(currentId) : showLegacyOption ? "legacy" : "";
       });
 
-      document.getElementById("save-btn").addEventListener("click", async () => {
+      persistDraftFields = async () => {
         const checkerSelect = document.getElementById("checker_name");
-        const selectedValue = checkerSelect.value;
+        const selectedValue = checkerSelect ? checkerSelect.value : "";
         let checkerId = null;
         let checkerName = "";
         if (selectedValue === "legacy") {
@@ -195,6 +202,10 @@
             checker_user_id: checkerId,
           }),
         });
+      };
+
+      document.getElementById("save-btn").addEventListener("click", async () => {
+        await persistDraftFields();
         window.location.reload();
       });
     } else {
@@ -246,6 +257,10 @@
       submitBtn.addEventListener("click", async () => {
         submitBtn.disabled = true;
         try {
+          // Save whatever's currently selected/typed (Nama Penyusun, Nama
+          // Pemeriksa, isi) first, so submitting always uses what's on
+          // screen right now — not whatever was last explicitly saved.
+          if (persistDraftFields) await persistDraftFields();
           await api(`/sop/${id}/submit`, { method: "POST" });
           window.location.reload();
         } catch (err) {

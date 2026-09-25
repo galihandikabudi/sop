@@ -37,6 +37,7 @@
           <select id="checker_name">
             <option value="">— Pilih Pemeriksa —</option>
           </select>
+          <div id="checker-hint" style="font-size:11.5px;color:var(--muted);display:none">Wajib diisi — Waka lain atau Kepala Sekolah</div>
         </div>
       </div>
       <div class="field">
@@ -112,8 +113,8 @@
 
   if (user.role === "waka") {
     checkerSelect.required = true;
-    const checkerLabel = document.querySelector('label[for="checker_name"]');
-    if (checkerLabel) checkerLabel.textContent = "Nama Pemeriksa (wajib — Waka lain atau Kepala Sekolah)";
+    const checkerHint = document.getElementById("checker-hint");
+    if (checkerHint) checkerHint.style.display = "block";
   }
 
   const contentEl = document.getElementById("content");
