@@ -18,8 +18,15 @@ export async function onRequestGet({ request, env }) {
              WHERE 1=1`;
   const params = [];
 
-  // Staff only see their own bidang; Kepala Sekolah sees everything.
-  if (user.role !== "kepala_sekolah") {
+  // Staff only see their own bidang. Kepala Sekolah sees everything. Waka
+  // see their own bidang PLUS any SOP (any bidang) where they're
+  // specifically named as the pemeriksa (checker_user_id) — so a SOP also
+  // shows up in that Waka's own Tinjauan Waka list, not just the queue for
+  // Waka of the SOP's own bidang.
+  if (user.role === "waka") {
+    sql += " AND (s.bidang = ? OR s.checker_user_id = ?)";
+    params.push(user.bidang, user.id);
+  } else if (user.role !== "kepala_sekolah") {
     sql += " AND s.bidang = ?";
     params.push(user.bidang);
   }
@@ -45,16 +52,16 @@ export async function onRequestPost({ request, env }) {
   const user = await getSessionUser(request, env);
   if (!user) return unauthorized();
 
-  const { title, bidang, content, preparer_name, checker_name } = await request.json().catch(() => ({}));
+  const { title, bidang, content, preparer_name, checker_name, checker_user_id } = await request.json().catch(() => ({}));
   if (!title || !bidang) return json({ error: "Judul dan bidang wajib diisi." }, 400);
 
   // Staff can only create SOPs for their own bidang.
   const effectiveBidang = user.role === "kepala_sekolah" ? bidang : user.bidang;
 
   const result = await env.DB.prepare(
-    `INSERT INTO sop (title, bidang, content, version, status, created_by, preparer_name, checker_name)
-     VALUES (?, ?, ?, '1.0', 'draft', ?, ?, ?)`
-  ).bind(title, effectiveBidang, content || "", user.id, preparer_name || null, checker_name || null).run();
+    `INSERT INTO sop (title, bidang, content, version, status, created_by, preparer_name, checker_name, checker_user_id)
+     VALUES (?, ?, ?, '1.0', 'draft', ?, ?, ?, ?)`
+  ).bind(title, effectiveBidang, content || "", user.id, preparer_name || null, checker_name || null, checker_user_id || null).run();
 
   const sopId = result.meta.last_row_id;
   await env.DB.prepare(

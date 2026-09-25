@@ -78,18 +78,21 @@
   }
   document.getElementById("preparer_name").value = user.name;
 
-  // "Nama Pemeriksa" adalah dropdown berisi akun yang terdaftar di bidang
-  // yang sama dengan SOP ini (bukan lagi ketik bebas) — daftar diambil
-  // dari /api/users/directory, yang bisa diakses semua peran (bukan cuma
-  // Kepala Sekolah seperti /api/users).
+  // "Nama Pemeriksa" adalah dropdown berisi akun bertingkat Waka ke atas
+  // (Waka bidang yang sama, atau Kepala Sekolah) — bukan lagi ketik bebas,
+  // dan bukan staf. Daftar diambil dari /api/users/directory, yang bisa
+  // diakses semua peran (bukan cuma Kepala Sekolah seperti /api/users).
   const checkerSelect = document.getElementById("checker_name");
   const directory = await api("/users/directory");
+  const ROLE_LABEL_CHECKER = { kepala_sekolah: "Kepala Sekolah", waka: "Waka" };
   function refreshCheckerOptions() {
     const currentBidang = bidangSelect.value;
-    const candidates = directory.filter((u) => u.bidang === currentBidang && u.id !== user.id);
+    const candidates = directory.filter(
+      (u) => u.id !== user.id && (u.role === "kepala_sekolah" || (u.role === "waka" && u.bidang === currentBidang))
+    );
     checkerSelect.innerHTML =
       `<option value="">— Pilih Pemeriksa —</option>` +
-      candidates.map((u) => `<option value="${u.name}">${u.name}</option>`).join("");
+      candidates.map((u) => `<option value="${u.id}">${u.name} (${ROLE_LABEL_CHECKER[u.role]})</option>`).join("");
   }
   refreshCheckerOptions();
   bidangSelect.addEventListener("change", refreshCheckerOptions);
@@ -140,6 +143,8 @@
     const errorEl = document.getElementById("error");
     errorEl.style.display = "none";
     try {
+      const checkerId = checkerSelect.value ? Number(checkerSelect.value) : null;
+      const checkerUser = checkerId ? directory.find((u) => u.id === checkerId) : null;
       const result = await api("/sop", {
         method: "POST",
         body: JSON.stringify({
@@ -147,7 +152,8 @@
           bidang: bidangSelect.value,
           content: contentEl.innerHTML,
           preparer_name: document.getElementById("preparer_name").value,
-          checker_name: document.getElementById("checker_name").value,
+          checker_name: checkerUser ? checkerUser.name : "",
+          checker_user_id: checkerId,
         }),
       });
       window.location.href = `/sop-detail.html?id=${result.id}`;

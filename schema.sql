@@ -58,7 +58,10 @@ CREATE TABLE IF NOT EXISTS sop (
                                      -- tanggal ini", tidak memengaruhi status/keaktifan SOP.
   created_by   INTEGER NOT NULL REFERENCES users(id),
   preparer_name TEXT,               -- Nama Penyusun (defaults to created_by's name if blank)
-  checker_name  TEXT,               -- Nama Pemeriksa
+  checker_name  TEXT,               -- Nama Pemeriksa (teks, untuk ditampilkan di dokumen cetak)
+  checker_user_id INTEGER REFERENCES users(id), -- akun yang dipilih sebagai pemeriksa;
+                                     -- dipakai supaya SOP ini juga muncul di halaman
+                                     -- Tinjauan Waka milik akun tsb.
   created_at   TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
 );

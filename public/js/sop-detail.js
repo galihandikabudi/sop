@@ -132,30 +132,53 @@
       editToolbar.innerHTML = richEditorToolbarHtml();
       wireRichEditorToolbar(editToolbar, editEl);
 
-      // Isi dropdown Nama Pemeriksa dari akun terdaftar di bidang yang
-      // sama. Kalau nilai yang tersimpan sekarang (mis. dari data lama,
-      // atau orang itu sudah tidak terdaftar) tidak ada di daftar, tetap
-      // ditambahkan sebagai opsi supaya data yang sudah ada tidak hilang.
+      // Isi dropdown Nama Pemeriksa dari akun bertingkat Waka ke atas
+      // (Waka bidang yang sama, atau Kepala Sekolah). Kalau data lama
+      // (checker_user_id belum ada / orang itu sudah tidak terdaftar)
+      // tidak cocok dengan daftar, tetap ditambahkan sebagai opsi supaya
+      // data yang sudah ada tidak hilang.
+      let checkerDirectory = [];
+      const ROLE_LABEL_CHECKER = { kepala_sekolah: "Kepala Sekolah", waka: "Waka" };
       api("/users/directory").then((directory) => {
+        checkerDirectory = directory;
         const checkerSelect = document.getElementById("checker_name");
         if (!checkerSelect) return;
-        const candidates = directory.filter((u) => u.bidang === sop.bidang);
-        const current = sop.checker_name || "";
-        const hasCurrent = !current || candidates.some((u) => u.name === current);
+        const candidates = directory.filter(
+          (u) => u.role === "kepala_sekolah" || (u.role === "waka" && u.bidang === sop.bidang)
+        );
+        const currentId = sop.checker_user_id || null;
+        const currentName = sop.checker_name || "";
+        const hasCurrentId = !currentId || candidates.some((u) => u.id === currentId);
+        const showLegacyOption = currentName && !hasCurrentId;
         checkerSelect.innerHTML =
           `<option value="">— Pilih Pemeriksa —</option>` +
-          (hasCurrent ? "" : `<option value="${current}">${current} (tidak terdaftar)</option>`) +
-          candidates.map((u) => `<option value="${u.name}">${u.name}</option>`).join("");
-        checkerSelect.value = current;
+          (showLegacyOption ? `<option value="legacy">${currentName} (tidak terdaftar)</option>` : "") +
+          candidates
+            .map((u) => `<option value="${u.id}">${u.name} (${ROLE_LABEL_CHECKER[u.role]})</option>`)
+            .join("");
+        checkerSelect.value = hasCurrentId && currentId ? String(currentId) : showLegacyOption ? "legacy" : "";
       });
 
       document.getElementById("save-btn").addEventListener("click", async () => {
+        const checkerSelect = document.getElementById("checker_name");
+        const selectedValue = checkerSelect.value;
+        let checkerId = null;
+        let checkerName = "";
+        if (selectedValue === "legacy") {
+          // Keep the existing (unregistered) name as-is — nothing was changed.
+          checkerName = sop.checker_name || "";
+        } else if (selectedValue) {
+          checkerId = Number(selectedValue);
+          const checkerUser = checkerDirectory.find((u) => u.id === checkerId);
+          checkerName = checkerUser ? checkerUser.name : "";
+        }
         await api(`/sop/${id}`, {
           method: "PUT",
           body: JSON.stringify({
             content: editEl.innerHTML,
             preparer_name: document.getElementById("preparer_name").value,
-            checker_name: document.getElementById("checker_name").value,
+            checker_name: checkerName,
+            checker_user_id: checkerId,
           }),
         });
         window.location.reload();

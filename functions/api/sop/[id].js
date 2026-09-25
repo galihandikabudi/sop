@@ -17,7 +17,8 @@ export async function onRequestGet({ request, env, params }) {
 
   const sop = await loadSop(env, params.id);
   if (!sop) return json({ error: "SOP tidak ditemukan." }, 404);
-  if (user.role !== "kepala_sekolah" && sop.bidang !== user.bidang) return forbidden();
+  const isNamedChecker = user.role === "waka" && sop.checker_user_id === user.id;
+  if (user.role !== "kepala_sekolah" && sop.bidang !== user.bidang && !isNamedChecker) return forbidden();
 
   const { results: versions } = await env.DB.prepare(
     `SELECT sv.version, sv.status, sv.note, sv.created_at, u.name AS actor_name
@@ -47,16 +48,17 @@ export async function onRequestPut({ request, env, params }) {
     return json({ error: "Hanya SOP berstatus draft yang dapat diedit." }, 400);
   }
 
-  const { title, content, preparer_name, checker_name } = await request.json().catch(() => ({}));
+  const { title, content, preparer_name, checker_name, checker_user_id } = await request.json().catch(() => ({}));
   await env.DB.prepare(
     `UPDATE sop SET title = COALESCE(?, title), content = COALESCE(?, content),
-            preparer_name = ?, checker_name = ?, updated_at = datetime('now')
+            preparer_name = ?, checker_name = ?, checker_user_id = ?, updated_at = datetime('now')
      WHERE id = ?`
   ).bind(
     title || null,
     content || null,
     preparer_name !== undefined ? preparer_name || null : sop.preparer_name,
     checker_name !== undefined ? checker_name || null : sop.checker_name,
+    checker_user_id !== undefined ? checker_user_id || null : sop.checker_user_id,
     sop.id
   ).run();
 

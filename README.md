@@ -469,21 +469,46 @@ di layar — bukan cuma cocok di Chrome.
 ## Pembaruan: Nama Pemeriksa Jadi Dropdown
 
 Field **"Nama Pemeriksa"** di halaman **Ajukan SOP Baru** (dan saat
-mengedit draf di halaman detail SOP) sekarang berupa **dropdown** berisi
-akun-akun yang terdaftar di bidang yang sama dengan SOP tersebut —
-bukan lagi ketik bebas. Daftarnya ikut berubah otomatis kalau Kepala
-Sekolah memilih bidang lain saat membuat SOP.
+mengedit draf di halaman detail SOP) sekarang berupa **dropdown** —
+bukan lagi ketik bebas.
+
+**Isi dropdown dibatasi ke tingkatan Waka ke atas**: hanya akun **Waka
+di bidang yang sama** dengan SOP tersebut, atau **Kepala Sekolah** —
+staf tidak muncul di daftar ini. Daftarnya ikut berubah otomatis kalau
+Kepala Sekolah memilih bidang lain saat membuat SOP.
 
 Kalau sebuah draf lama sudah punya nama pemeriksa yang, misalnya, akunnya
 sudah dihapus atau namanya beda dari daftar terkini, nama itu tetap
 muncul sebagai pilihan (ditandai "tidak terdaftar") supaya data yang
 sudah ada tidak hilang begitu saja.
 
+### Pemeriksa yang dipilih terhubung ke akun aslinya
+
+Selain tetap ditampilkan sebagai teks di dokumen cetak (kolom lama
+`checker_name` tidak berubah), pemeriksa yang dipilih sekarang juga
+disimpan sebagai tautan ke akun aslinya (`checker_user_id`). Efeknya:
+
+- SOP yang menunggu review tetap muncul di **Tinjauan Waka** untuk semua
+  Waka di bidang yang sama seperti biasa, **dan**
+- SOP itu juga otomatis muncul di halaman **Tinjauan Waka milik akun yang
+  namanya dipilih sebagai pemeriksa** — walaupun (dalam kasus khusus)
+  akun itu bukan Waka di bidang yang sama persis.
+
+### Migrasi database yang perlu dijalankan
+
+Buka **D1 Console** di dashboard Cloudflare, lalu jalankan statement ini
+(cukup satu):
+
+```sql
+ALTER TABLE sop ADD COLUMN checker_user_id INTEGER;
+```
+
 ### Berkas yang baru/berubah pada pembaruan ini
 
-Baru: `functions/api/users/directory.js`
+Baru: `functions/api/users/directory.js`, `migrations/008_checker_user_id.sql`
 
-Berubah: `public/sop-new.html`, `public/js/sop-detail.js`
+Berubah: `schema.sql`, `functions/api/sop/index.js`, `functions/api/sop/[id].js`,
+`public/sop-new.html`, `public/js/sop-detail.js`, `public/js/waka-review.js`
 
 ## Fitur lain
 

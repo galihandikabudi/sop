@@ -12,7 +12,7 @@
   const subCount = document.getElementById("sub-count");
 
   const queue = await api("/sop?status=menunggu_review");
-  subCount.textContent = `${queue.length} pengajuan SOP menunggu review Anda (bidang ${user.bidang})`;
+  subCount.textContent = `${queue.length} pengajuan SOP menunggu review Anda`;
 
   if (!queue.length) {
     bodyEl.innerHTML = `<div class="empty-state" style="flex:1">Tidak ada pengajuan yang menunggu saat ini.</div>`;
