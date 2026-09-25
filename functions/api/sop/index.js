@@ -22,12 +22,10 @@ export async function onRequestGet({ request, env }) {
   // see their own bidang PLUS any SOP (any bidang) where they're
   // specifically named as the pemeriksa (checker_user_id) — so a SOP also
   // shows up in that Waka's own Tinjauan Waka list, not just the queue for
-  // Waka of the SOP's own bidang. A Waka never needs to review their own
-  // submission, so anything they created themselves is excluded here even
-  // if it happens to match on bidang.
+  // Waka of the SOP's own bidang.
   if (user.role === "waka") {
-    sql += " AND (s.bidang = ? OR s.checker_user_id = ?) AND s.created_by != ?";
-    params.push(user.bidang, user.id, user.id);
+    sql += " AND (s.bidang = ? OR s.checker_user_id = ?)";
+    params.push(user.bidang, user.id);
   } else if (user.role !== "kepala_sekolah") {
     sql += " AND s.bidang = ?";
     params.push(user.bidang);
@@ -35,6 +33,15 @@ export async function onRequestGet({ request, env }) {
   if (status) {
     sql += " AND s.status = ?";
     params.push(status);
+    // A Waka never needs to review their own submission, so when this is
+    // specifically the "menunggu_review" queue, exclude anything they
+    // created themselves — even if it matches on bidang. This must NOT
+    // apply to the general "Daftar SOP" list (no status filter), which
+    // should still show a Waka their own SOPs.
+    if (status === "menunggu_review" && user.role === "waka") {
+      sql += " AND s.created_by != ?";
+      params.push(user.id);
+    }
   }
   if (bidang) {
     sql += " AND s.bidang = ?";

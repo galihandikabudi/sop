@@ -43,11 +43,15 @@ export async function onRequestPost({ request, env, params }) {
     if (checker.role === "kepala_sekolah") {
       nextStatus = "menunggu_persetujuan";
       noteText = "Diajukan untuk persetujuan Kepala Sekolah (Pemeriksa = Kepala Sekolah)";
-    } else if (checker.role === "waka" && checker.bidang === sop.bidang) {
+    } else if (checker.role === "waka") {
+      // Waka bidang lain juga sah sebagai Pemeriksa di sini — bidang yang
+      // sama dengan pengaju biasanya cuma pengaju itu sendiri (sudah
+      // dikecualikan di atas), jadi "Waka lain" pada praktiknya berarti
+      // Waka bidang lain.
       nextStatus = "menunggu_review";
       noteText = "Diajukan untuk review Waka lain";
     } else {
-      return json({ error: "Pemeriksa harus Waka bidang yang sama atau Kepala Sekolah." }, 400);
+      return json({ error: "Pemeriksa harus Waka bidang lain atau Kepala Sekolah." }, 400);
     }
   } else {
     const wakaExists = await env.DB.prepare(

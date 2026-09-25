@@ -138,7 +138,6 @@
       // tidak cocok dengan daftar, tetap ditambahkan sebagai opsi supaya
       // data yang sudah ada tidak hilang.
       let checkerDirectory = [];
-      const ROLE_LABEL_CHECKER = { kepala_sekolah: "Kepala Sekolah", waka: "Waka" };
       api("/users/directory").then((directory) => {
         checkerDirectory = directory;
         const checkerSelect = document.getElementById("checker_name");
@@ -149,10 +148,14 @@
           const checkerLabel = document.querySelector('label[for="checker_name"]');
           if (checkerLabel) checkerLabel.textContent = "Nama Pemeriksa (wajib — Waka lain atau Kepala Sekolah)";
         }
+        // Kalau pembuat SOP-nya seorang Waka, Waka bidang LAIN pun boleh
+        // jadi Pemeriksa (bukan cuma Waka bidang yang sama, yang biasanya
+        // cuma dirinya sendiri) — selain Kepala Sekolah, dan tidak boleh
+        // dirinya sendiri.
         const candidates = directory.filter(
           (u) =>
-            (u.role === "kepala_sekolah" || (u.role === "waka" && u.bidang === sop.bidang)) &&
-            !(creatorIsWaka && u.id === sop.created_by)
+            u.id !== sop.created_by &&
+            (u.role === "kepala_sekolah" || (u.role === "waka" && (creatorIsWaka || u.bidang === sop.bidang)))
         );
         const currentId = sop.checker_user_id || null;
         const currentName = sop.checker_name || "";
@@ -162,7 +165,10 @@
           `<option value="">— Pilih Pemeriksa —</option>` +
           (showLegacyOption ? `<option value="legacy">${currentName} (tidak terdaftar)</option>` : "") +
           candidates
-            .map((u) => `<option value="${u.id}">${u.name} (${ROLE_LABEL_CHECKER[u.role]})</option>`)
+            .map(
+              (u) =>
+                `<option value="${u.id}">${u.name}${u.role === "waka" ? ` (Waka ${u.bidang})` : " (Kepala Sekolah)"}</option>`
+            )
             .join("");
         checkerSelect.value = hasCurrentId && currentId ? String(currentId) : showLegacyOption ? "legacy" : "";
       });

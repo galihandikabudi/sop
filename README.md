@@ -514,10 +514,10 @@ Berubah: `schema.sql`, `functions/api/sop/index.js`, `functions/api/sop/[id].js`
 
 Kalau yang mengajukan SOP adalah seorang **Waka**, dua aturan baru berlaku:
 
-1. **Pemeriksa wajib diisi**, dan wajib **Waka lain** (di bidang yang sama)
-   atau **Kepala Sekolah** — bukan dirinya sendiri, dan bukan Waka bidang
-   itu sendiri kalau kebetulan hanya ada satu akun Waka (karena Waka itu
-   tepat adalah si pengaju). Dropdown "Nama Pemeriksa" otomatis
+1. **Pemeriksa wajib diisi**, dan wajib **Waka lain** (boleh dari bidang
+   apa pun — karena bidang yang sama dengan pengaju biasanya cuma diisi
+   satu akun Waka, yaitu pengaju itu sendiri) atau **Kepala Sekolah** —
+   tidak boleh dirinya sendiri. Dropdown "Nama Pemeriksa" otomatis
    menyembunyikan pilihan yang tidak valid untuk kasus ini, dan tombol
    "Ajukan Persetujuan" akan menolak dengan pesan kalau Pemeriksa belum
    diisi dengan benar.

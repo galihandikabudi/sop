@@ -88,15 +88,24 @@
   // Kepala Sekolah (field dibuat wajib, dan server juga memvalidasi ulang).
   const checkerSelect = document.getElementById("checker_name");
   const directory = await api("/users/directory");
-  const ROLE_LABEL_CHECKER = { kepala_sekolah: "Kepala Sekolah", waka: "Waka" };
   function refreshCheckerOptions() {
     const currentBidang = bidangSelect.value;
+    // Kalau pengaju sendiri seorang Waka, "Waka bidang yang sama" biasanya
+    // cuma dirinya sendiri (satu bidang umumnya satu Waka) — jadi untuk
+    // kasus ini, Waka bidang LAIN pun boleh jadi Pemeriksa, bukan cuma
+    // Kepala Sekolah. Untuk staf/Kepala Sekolah yang membuat SOP, Pemeriksa
+    // tetap dibatasi ke Waka bidang yang sama (atau Kepala Sekolah), karena
+    // itu yang relevan meninjau isi SOP tersebut.
     const candidates = directory.filter(
-      (u) => u.id !== user.id && (u.role === "kepala_sekolah" || (u.role === "waka" && u.bidang === currentBidang))
+      (u) =>
+        u.id !== user.id &&
+        (u.role === "kepala_sekolah" || (u.role === "waka" && (user.role === "waka" || u.bidang === currentBidang)))
     );
     checkerSelect.innerHTML =
       `<option value="">— Pilih Pemeriksa —</option>` +
-      candidates.map((u) => `<option value="${u.id}">${u.name} (${ROLE_LABEL_CHECKER[u.role]})</option>`).join("");
+      candidates
+        .map((u) => `<option value="${u.id}">${u.name}${u.role === "waka" ? ` (Waka ${u.bidang})` : " (Kepala Sekolah)"}</option>`)
+        .join("");
   }
   refreshCheckerOptions();
   bidangSelect.addEventListener("change", refreshCheckerOptions);
