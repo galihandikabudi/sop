@@ -39,17 +39,13 @@ const STATUS_LABEL = {
   ditolak: "Ditolak",
 };
 
-const BIDANG_LIST = [
-  "Kurikulum",
-  "Kesiswaan",
-  "Sarana & Prasarana",
-  "Kaprodi TKR/TO",
-  "Kaprodi AKL",
-  "BKK",
-  "Tata Usaha",
-  "Bendahara Sekolah",
-  "Publikasi",
-];
+// Daftar bidang dulunya tertulis tetap di sini — sekarang dikelola Kepala
+// Sekolah lewat halaman Pengaturan dan disimpan di tabel `bidang`. Ambil
+// lewat fetchBidangNames() di halaman yang butuh isi dropdown bidang.
+async function fetchBidangNames() {
+  const list = await api("/bidang");
+  return list.map((b) => b.name);
+}
 
 // Selisih hari dari sebuah tanggal ke hari ini. Dulu dipakai untuk hitung
 // mundur ke tanggal kedaluwarsa; sekarang dipakai untuk hitung "sudah

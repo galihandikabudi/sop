@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pengaturan — Sistem SOP SMK Muhada</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="layout">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="serif">Pengaturan</h1>
+        <div class="sub">Kelola daftar bidang/unit kerja yang dipakai di seluruh aplikasi</div>
+      </div>
+      <button class="btn btn-primary" id="add-btn">+ Tambah Bidang</button>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Nama Bidang</th><th>Kode (untuk nomor dokumen)</th><th style="text-align:right">Aksi</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+  <form id="form" class="modal-card">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="font-weight:700;font-size:16px" id="form-title">Tambah Bidang</div>
+      <button type="button" id="modal-close-btn" style="background:none;border:none;font-size:20px;line-height:1;color:var(--muted);padding:0">&times;</button>
+    </div>
+    <div class="field">
+      <label for="name">Nama Bidang</label>
+      <input id="name" required placeholder="mis. Perpustakaan">
+    </div>
+    <div class="field">
+      <label for="code">Kode Singkatan (opsional)</label>
+      <input id="code" placeholder="mis. PERPUS — dipakai di nomor dokumen SOP" maxlength="10">
+      <div style="font-size:11.5px;color:var(--muted)">Kalau dikosongkan, dibuat otomatis dari 3 huruf pertama nama bidang.</div>
+    </div>
+    <div id="error" class="error-text" style="display:none"></div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button type="submit" class="btn btn-primary" id="submit-btn" style="flex:1;justify-content:center">Tambah Bidang</button>
+      <button type="button" class="btn btn-danger" id="delete-btn" style="display:none">Hapus</button>
+    </div>
+  </form>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/settings.js"></script>
+</body>
+</html>

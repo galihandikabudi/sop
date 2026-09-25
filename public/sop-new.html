@@ -68,7 +68,8 @@
 
   const bidangSelect = document.getElementById("bidang");
   if (user.role === "kepala_sekolah") {
-    bidangSelect.innerHTML = BIDANG_LIST.map((b) => `<option value="${b}">${b}</option>`).join("");
+    const bidangNames = await fetchBidangNames();
+    bidangSelect.innerHTML = bidangNames.map((b) => `<option value="${b}">${b}</option>`).join("");
   } else {
     bidangSelect.innerHTML = `<option value="${user.bidang}">${user.bidang}</option>`;
     bidangSelect.disabled = true;

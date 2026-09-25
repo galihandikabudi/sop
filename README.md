@@ -371,6 +371,72 @@ Baru: `migrations/006_review_reminder.sql`, `functions/api/sop/[id]/review-remin
 Berubah: `schema.sql`, `functions/api/dashboard.js`, `public/js/dashboard.js`,
 `public/dashboard.html`, `public/js/sop-detail.js`, `public/js/activity-log.js`
 
+## Pembaruan: Tampilan Halaman Pengguna Dirapikan (Overlay)
+
+Form "Tambah Akun" yang sebelumnya selalu tampil di samping tabel sekarang
+jadi **overlay/modal** — muncul saat tombol **"+ Tambah Akun"** di pojok
+kanan atas diklik, lalu bisa ditutup dengan tombol × atau klik di luar
+kotaknya. Tabel pengguna jadi lega, satu kolom penuh.
+
+Tombol **Edit** pada setiap baris memakai overlay yang sama; form edit itu
+sekarang juga punya tombol **"Hapus Akun"** langsung di dalamnya (selain
+tombol "Simpan Perubahan"), jadi tidak perlu tombol "Hapus" terpisah lagi
+di tabel — semua aksi terhadap satu akun (ubah data, ubah peran termasuk
+jadi Kepala Sekolah, atau hapus) terkumpul di satu tempat.
+
+### Berkas yang berubah pada pembaruan ini
+
+`public/users.html`, `public/js/users.js`
+
+## Pembaruan: Kelola Bidang Sendiri (Halaman Pengaturan)
+
+Sebelumnya daftar bidang (Kurikulum, Kesiswaan, dst.) tertulis tetap di
+kode — untuk menambah/mengubah/menghapus bidang, kode aplikasinya harus
+diubah dan diupload ulang. Sekarang ada halaman **Pengaturan** (khusus
+Kepala Sekolah, menu baru di sidebar) untuk mengelola bidang sendiri:
+
+- **Tambah Bidang** — nama bebas, plus kode singkatan opsional (dipakai di nomor dokumen resmi, mis. "PERPUS" untuk bidang baru "Perpustakaan"). Kalau kode dikosongkan, dibuat otomatis dari 3 huruf pertama nama bidang.
+- **Edit Bidang** — ubah nama dan/atau kode. Kalau namanya diubah, seluruh akun dan SOP yang memakai nama lama otomatis ikut diperbarui ke nama baru (termasuk penghitung nomor dokumennya), jadi tidak ada data yang "nyangkut" di nama lama.
+- **Hapus Bidang** — ditolak kalau masih ada akun atau SOP yang memakai bidang itu (supaya tidak ada data yang jadi yatim); pindahkan dulu akun/SOP terkait ke bidang lain baru bisa dihapus.
+
+Dropdown bidang di halaman **Ajukan SOP Baru** dan **Pengguna** (Tambah/Edit
+Akun) sekarang mengambil daftar ini secara langsung, jadi begitu bidang baru
+ditambahkan, langsung muncul di semua tempat tanpa perlu update kode lagi.
+
+### Migrasi database yang perlu dijalankan
+
+Buka **D1 Console** → jalankan `migrations/007_bidang_table.sql` (dua pernyataan: membuat tabel `bidang`, lalu mengisi 9 bidang yang sudah ada saat ini beserta kode singkatannya masing-masing, supaya penomoran dokumen yang sudah berjalan tidak berubah).
+
+### Berkas yang baru/berubah pada pembaruan ini
+
+Baru: `migrations/007_bidang_table.sql`, `functions/api/bidang/index.js`,
+`functions/api/bidang/[id].js`, `public/settings.html`, `public/js/settings.js`
+
+Berubah: `schema.sql`, `lib/docNumber.js`, `public/js/api.js`, `public/js/sidebar.js`,
+`public/js/activity-log.js`, `public/js/users.js`, `public/users.html`, `public/sop-new.html`
+
+## Masukan: Menghubungkan Sistem SOP dengan SPMI
+
+SPMI (Sistem Penjaminan Mutu Internal) di sekolah pada dasarnya bekerja
+lewat siklus **PPEPP**: Penetapan → Pelaksanaan → Evaluasi → Pengendalian →
+Peningkatan standar. Sistem SOP ini sudah menutupi bagian **Penetapan** dan
+**Pelaksanaan** (SOP dibuat, disahkan, disosialisasikan, dan staf
+mengonfirmasi baca). Yang belum ada adalah bagian **Evaluasi**,
+**Pengendalian**, dan **Peningkatan** — di sinilah titik hubungnya dengan
+SPMI/audit mutu internal (AMI) dan instrumen pemetaan mutu 8 SNP yang
+pernah dibahas sebelumnya. Beberapa arah yang bisa dikembangkan:
+
+1. **Kaitkan setiap SOP ke standar mutu (SNP) yang dipenuhinya.** Tambah satu field "Standar SNP terkait" saat membuat SOP (mis. Standar Isi, Standar Proses, Standar Penilaian, dst.). Nanti bisa direkap: standar mana yang sudah punya SOP pendukung, standar mana yang belum — inilah bagian "Penetapan" versi SPMI.
+2. **Hasil temuan Audit Mutu Internal (AMI) ditautkan ke SOP terkait.** Kalau auditor internal menemukan ketidaksesuaian (mis. "Prosedur penerimaan siswa baru tidak dijalankan sesuai SOP"), temuan itu dicatat dan ditautkan langsung ke SOP yang bersangkutan — riwayatnya menyatu dengan riwayat versi SOP itu sendiri, bukan dokumen terpisah. Ini bagian "Evaluasi" dan "Pengendalian".
+3. **Tindak lanjut (corrective action) dari hasil AMI/pemetaan mutu memicu revisi SOP.** Kalau sebuah temuan mengharuskan SOP direvisi, alurnya bisa otomatis membuat draf revisi baru dari SOP terkait — menutup siklus PPEPP sampai ke "Peningkatan" tanpa proses manual terpisah.
+4. **Dashboard mutu gabungan.** Karena keduanya sama-sama aplikasi berbasis Cloudflare + D1, satu Beranda bisa menampilkan status SOP *dan* status pemetaan mutu 8 SNP berdampingan — Kepala Sekolah tidak perlu bolak-balik dua aplikasi buat melihat gambaran mutu sekolah secara utuh.
+
+Titik masuk paling realistis untuk mulai: nomor 1 (kaitkan SOP ke standar
+SNP) — perubahannya kecil (satu kolom + satu dropdown) tapi langsung
+membuka jalan untuk laporan "standar mana yang sudah/belum didukung SOP",
+yang biasanya jadi salah satu bukti dokumen paling dicari saat akreditasi
+atau audit mutu. Kalau tertarik, saya bisa langsung buatkan.
+
 ## Fitur lain
 
 - **Format teks kaya**: kotak isi SOP (saat membuat/mengedit draft) mendukung

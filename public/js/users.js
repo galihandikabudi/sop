@@ -10,10 +10,13 @@ const ROLE_LABEL = { kepala_sekolah: "Kepala Sekolah", waka: "Waka Bidang", staf
     return;
   }
 
+  const overlay = document.getElementById("modal-overlay");
   const form = document.getElementById("form");
   const formTitle = document.getElementById("form-title");
   const submitBtn = document.getElementById("submit-btn");
-  const cancelBtn = document.getElementById("cancel-edit-btn");
+  const deleteBtn = document.getElementById("delete-btn");
+  const addBtn = document.getElementById("add-btn");
+  const closeBtn = document.getElementById("modal-close-btn");
   const roleSelect = document.getElementById("role");
   const bidangField = document.getElementById("bidang-field");
   const bidangSelect = document.getElementById("bidang");
@@ -21,16 +24,23 @@ const ROLE_LABEL = { kepala_sekolah: "Kepala Sekolah", waka: "Waka Bidang", staf
   const passwordLabel = document.getElementById("password-label");
   const errorEl = document.getElementById("error");
 
-  bidangSelect.innerHTML = BIDANG_LIST.map((b) => `<option value="${b}">${b}</option>`).join("");
+  bidangSelect.innerHTML = (await fetchBidangNames()).map((b) => `<option value="${b}">${b}</option>`).join("");
 
   let editingId = null;
+  let userList = [];
 
   function toggleBidangField() {
     bidangField.style.display = roleSelect.value === "kepala_sekolah" ? "none" : "";
     bidangSelect.required = roleSelect.value !== "kepala_sekolah";
   }
   roleSelect.addEventListener("change", toggleBidangField);
-  toggleBidangField();
+
+  function openModal() {
+    overlay.classList.add("open");
+  }
+  function closeModal() {
+    overlay.classList.remove("open");
+  }
 
   function resetForm() {
     editingId = null;
@@ -38,11 +48,16 @@ const ROLE_LABEL = { kepala_sekolah: "Kepala Sekolah", waka: "Waka Bidang", staf
     toggleBidangField();
     formTitle.textContent = "Tambah Akun";
     submitBtn.textContent = "Buat Akun";
-    cancelBtn.style.display = "none";
+    deleteBtn.style.display = "none";
     passwordLabel.textContent = "Password Awal";
     passwordInput.placeholder = "";
     passwordInput.required = true;
     errorEl.style.display = "none";
+  }
+
+  function startAdd() {
+    resetForm();
+    openModal();
   }
 
   function startEdit(u) {
@@ -58,17 +73,21 @@ const ROLE_LABEL = { kepala_sekolah: "Kepala Sekolah", waka: "Waka Bidang", staf
     passwordInput.placeholder = "Kosongkan jika tidak diubah";
     formTitle.textContent = `Edit Akun — ${u.name}`;
     submitBtn.textContent = "Simpan Perubahan";
-    cancelBtn.style.display = "";
+    deleteBtn.style.display = u.id === me.id ? "none" : "";
     errorEl.style.display = "none";
-    form.scrollIntoView({ behavior: "smooth", block: "start" });
+    openModal();
   }
 
-  cancelBtn.addEventListener("click", () => resetForm());
+  addBtn.addEventListener("click", startAdd);
+  closeBtn.addEventListener("click", closeModal);
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closeModal();
+  });
 
   async function loadUsers() {
-    const list = await api("/users");
+    userList = await api("/users");
     document.getElementById("rows").innerHTML =
-      list
+      userList
         .map(
           (u) => `
       <tr style="cursor:default">
@@ -76,13 +95,8 @@ const ROLE_LABEL = { kepala_sekolah: "Kepala Sekolah", waka: "Waka Bidang", staf
         <td style="color:var(--muted)">${u.email}</td>
         <td style="color:var(--muted)">${u.bidang || "—"}</td>
         <td>${ROLE_LABEL[u.role] || u.role}</td>
-        <td style="text-align:right;white-space:nowrap">
+        <td style="text-align:right">
           <button class="btn" style="padding:6px 10px;font-size:12px" data-edit-id="${u.id}">Edit</button>
-          ${
-            u.id === me.id
-              ? ""
-              : `<button class="btn btn-danger" style="padding:6px 10px;font-size:12px;margin-left:6px" data-delete-id="${u.id}" data-delete-name="${u.name.replace(/"/g, "&quot;")}">Hapus</button>`
-          }
         </td>
       </tr>`
         )
@@ -90,26 +104,28 @@ const ROLE_LABEL = { kepala_sekolah: "Kepala Sekolah", waka: "Waka Bidang", staf
 
     document.querySelectorAll("[data-edit-id]").forEach((btn) => {
       btn.addEventListener("click", () => {
-        const u = list.find((x) => String(x.id) === btn.dataset.editId);
+        const u = userList.find((x) => String(x.id) === btn.dataset.editId);
         if (u) startEdit(u);
       });
     });
-
-    document.querySelectorAll("[data-delete-id]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const id = btn.dataset.deleteId;
-        const name = btn.dataset.deleteName;
-        if (!confirm(`Hapus akun "${name}"? Tindakan ini tidak bisa dibatalkan.`)) return;
-        try {
-          await api(`/users/${id}`, { method: "DELETE" });
-          if (editingId === Number(id)) resetForm();
-          loadUsers();
-        } catch (err) {
-          alert(err.message);
-        }
-      });
-    });
   }
+
+  deleteBtn.addEventListener("click", async () => {
+    const u = userList.find((x) => x.id === editingId);
+    if (!u) return;
+    if (!confirm(`Hapus akun "${u.name}"? Tindakan ini tidak bisa dibatalkan.`)) return;
+    deleteBtn.disabled = true;
+    try {
+      await api(`/users/${editingId}`, { method: "DELETE" });
+      closeModal();
+      loadUsers();
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.style.display = "block";
+    } finally {
+      deleteBtn.disabled = false;
+    }
+  });
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -127,7 +143,7 @@ const ROLE_LABEL = { kepala_sekolah: "Kepala Sekolah", waka: "Waka Bidang", staf
       } else {
         await api("/users", { method: "POST", body: JSON.stringify(payload) });
       }
-      resetForm();
+      closeModal();
       loadUsers();
     } catch (err) {
       errorEl.textContent = err.message;
@@ -135,5 +151,6 @@ const ROLE_LABEL = { kepala_sekolah: "Kepala Sekolah", waka: "Waka Bidang", staf
     }
   });
 
+  resetForm();
   loadUsers();
 })();

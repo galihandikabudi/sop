@@ -2,6 +2,28 @@
 -- If you already have a live database, do NOT re-run this file — instead
 -- run migrations/002_tiered_approval_comments_audit.sql once (see README).
 
+-- Daftar bidang bisa dikelola Kepala Sekolah lewat halaman Pengaturan
+-- (tambah/ubah nama/hapus). `code` dipakai untuk kode singkatan di nomor
+-- dokumen resmi (lib/docNumber.js) — kalau kosong, dibuat otomatis dari
+-- 3 huruf pertama nama bidang.
+CREATE TABLE IF NOT EXISTS bidang (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  name       TEXT NOT NULL UNIQUE,
+  code       TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+INSERT OR IGNORE INTO bidang (name, code) VALUES
+  ('Kurikulum', 'KUR'),
+  ('Kesiswaan', 'KES'),
+  ('Sarana & Prasarana', 'SARPRAS'),
+  ('Kaprodi TKR/TO', 'OTO'),
+  ('Kaprodi AKL', 'AKL'),
+  ('BKK', 'BKK'),
+  ('Tata Usaha', 'TU'),
+  ('Bendahara Sekolah', 'BEN'),
+  ('Publikasi', 'PUB');
+
 CREATE TABLE IF NOT EXISTS users (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   name          TEXT NOT NULL,

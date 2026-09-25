@@ -15,6 +15,9 @@ const ACTION_LABEL = {
   account_update: "Mengubah akun sendiri",
   review_reminder_set: "Menjadwalkan peninjauan",
   review_reminder_clear: "Membatalkan pengingat peninjauan",
+  bidang_create: "Menambah bidang",
+  bidang_update: "Mengubah bidang",
+  bidang_delete: "Menghapus bidang",
 };
 
 (async function () {
