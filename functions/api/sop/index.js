@@ -45,16 +45,16 @@ export async function onRequestPost({ request, env }) {
   const user = await getSessionUser(request, env);
   if (!user) return unauthorized();
 
-  const { title, bidang, content } = await request.json().catch(() => ({}));
+  const { title, bidang, content, preparer_name, checker_name } = await request.json().catch(() => ({}));
   if (!title || !bidang) return json({ error: "Judul dan bidang wajib diisi." }, 400);
 
   // Staff can only create SOPs for their own bidang.
   const effectiveBidang = user.role === "kepala_sekolah" ? bidang : user.bidang;
 
   const result = await env.DB.prepare(
-    `INSERT INTO sop (title, bidang, content, version, status, created_by)
-     VALUES (?, ?, ?, '1.0', 'draft', ?)`
-  ).bind(title, effectiveBidang, content || "", user.id).run();
+    `INSERT INTO sop (title, bidang, content, version, status, created_by, preparer_name, checker_name)
+     VALUES (?, ?, ?, '1.0', 'draft', ?, ?, ?)`
+  ).bind(title, effectiveBidang, content || "", user.id, preparer_name || null, checker_name || null).run();
 
   const sopId = result.meta.last_row_id;
   await env.DB.prepare(

@@ -99,6 +99,16 @@
     const bodyCard = document.getElementById("body-card");
     if (isDraft && isOwnerOrAdmin) {
       bodyCard.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+          <div class="field">
+            <label for="preparer_name">Nama Penyusun</label>
+            <input id="preparer_name" value="${sop.preparer_name || ""}" placeholder="Nama yang menyusun SOP ini">
+          </div>
+          <div class="field">
+            <label for="checker_name">Nama Pemeriksa</label>
+            <input id="checker_name" value="${sop.checker_name || ""}" placeholder="mis. Waka terkait">
+          </div>
+        </div>
         <div class="field">
           <div style="display:flex;align-items:center;justify-content:space-between">
             <label style="margin-bottom:0">Isi SOP</label>
@@ -116,7 +126,11 @@
       document.getElementById("save-btn").addEventListener("click", async () => {
         await api(`/sop/${id}`, {
           method: "PUT",
-          body: JSON.stringify({ content: editEl.innerHTML }),
+          body: JSON.stringify({
+            content: editEl.innerHTML,
+            preparer_name: document.getElementById("preparer_name").value,
+            checker_name: document.getElementById("checker_name").value,
+          }),
         });
         window.location.reload();
       });

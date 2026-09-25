@@ -29,7 +29,11 @@ export async function onRequestGet({ request, env, params }) {
     "SELECT 1 FROM read_confirmations WHERE sop_id = ? AND user_id = ?"
   ).bind(sop.id, user.id).first();
 
-  return json({ ...sop, versions, hasConfirmedRead: !!myRead });
+  const kepsek = await env.DB.prepare(
+    "SELECT name FROM users WHERE role = 'kepala_sekolah' ORDER BY id LIMIT 1"
+  ).first();
+
+  return json({ ...sop, versions, hasConfirmedRead: !!myRead, kepalaSekolahName: kepsek ? kepsek.name : null });
 }
 
 export async function onRequestPut({ request, env, params }) {
@@ -43,10 +47,18 @@ export async function onRequestPut({ request, env, params }) {
     return json({ error: "Hanya SOP berstatus draft yang dapat diedit." }, 400);
   }
 
-  const { title, content } = await request.json().catch(() => ({}));
+  const { title, content, preparer_name, checker_name } = await request.json().catch(() => ({}));
   await env.DB.prepare(
-    "UPDATE sop SET title = COALESCE(?, title), content = COALESCE(?, content), updated_at = datetime('now') WHERE id = ?"
-  ).bind(title || null, content || null, sop.id).run();
+    `UPDATE sop SET title = COALESCE(?, title), content = COALESCE(?, content),
+            preparer_name = ?, checker_name = ?, updated_at = datetime('now')
+     WHERE id = ?`
+  ).bind(
+    title || null,
+    content || null,
+    preparer_name !== undefined ? preparer_name || null : sop.preparer_name,
+    checker_name !== undefined ? checker_name || null : sop.checker_name,
+    sop.id
+  ).run();
 
   await logActivity(env, {
     actorId: user.id,

@@ -6,148 +6,134 @@
 <title>Cetak SOP — Sistem SOP SMK Muhada</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/print.css">
 <style>
   body { background: #DCD8CC; }
   .print-toolbar {
     max-width: 210mm; margin: 0 auto; padding: 16px 0; display: flex;
     justify-content: space-between; align-items: center;
   }
-  .sheet {
-    max-width: 210mm; min-height: 297mm; margin: 0 auto 40px; background: #fff;
-    box-shadow: 0 2px 16px rgba(0,0,0,.15); padding: 18mm 16mm; box-sizing: border-box;
+  #status-msg { max-width: 210mm; margin: 0 auto; padding: 40px 16px; color: #5B6663; font-size: 13.5px; }
+  /* Paged.js renders each page as a boxed .pagedjs_page — give the
+     preview a card-like look on screen; print styles come from print.css
+     (@page rules) and are applied by the browser directly when printing. */
+  .pagedjs_pages { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+  .pagedjs_page {
+    background: #fff; box-shadow: 0 2px 16px rgba(0,0,0,.15); margin: 0 !important;
   }
-
-  /* Header built from bordered divs instead of a <table> — avoids
-     browsers dropping hairline borders around rowspan cells when printed. */
-  .doc-header {
-    display: flex; border: 1.4px solid #1C2321; margin-bottom: 22px;
-  }
-  .doc-header-left {
-    width: 48%; padding: 16px 18px; border-right: 1.4px solid #1C2321;
-    display: flex; flex-direction: column; justify-content: center; text-align: center;
-  }
-  .doc-school-name { font-weight: 700; font-size: 14px; letter-spacing: .01em; }
-  .doc-school-sub { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
-  .doc-title {
-    font-family: 'Source Serif 4', Georgia, serif; font-size: 13.5px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: .02em; margin-top: 12px;
-  }
-  .doc-header-right { width: 45%; display: flex; flex-direction: column; }
-  .doc-meta-row {
-    flex: 1; padding: 8px 14px; font-size: 12px; display: flex; align-items: center;
-    border-bottom: 1.4px solid #1C2321;
-  }
-  .doc-meta-row:last-child { border-bottom: none; }
-  .doc-header-qr {
-    width: 100px; flex-shrink: 0; border-left: 1.4px solid #1C2321;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 8px; gap: 4px; text-align: center;
-  }
-  .doc-header-qr img { width: 76px; height: 76px; display: block; }
-  .doc-header-qr .qr-caption { font-size: 8.5px; color: var(--muted); line-height: 1.3; }
-
-  .sop-title-line { font-family: 'Source Serif 4', Georgia, serif; font-size: 20px; font-weight: 600; text-align: center; margin: 18px 0 26px; }
-  .sign-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 56px; }
-  .sign-box { text-align: center; font-size: 12.5px; }
-  .sign-box .role { font-weight: 600; margin-bottom: 64px; }
-  .sign-box .name { border-top: 1px solid #1C2321; padding-top: 6px; font-weight: 600; }
-  .sign-box .sub { color: var(--muted); font-size: 11.5px; margin-top: 2px; }
-
   @media print {
     body { background: #fff; }
     .no-print { display: none !important; }
-    .sheet { box-shadow: none; margin: 0; padding: 12mm 14mm; max-width: none; min-height: auto; }
-    @page { size: A4; margin: 0; }
+    .pagedjs_pages { gap: 0; }
+    .pagedjs_page { box-shadow: none !important; }
   }
 </style>
 </head>
 <body>
 <div class="print-toolbar no-print">
   <a id="back-link" href="/sop-list.html" class="btn btn-secondary">← Kembali</a>
-  <button onclick="window.print()" class="btn btn-primary">Cetak / Simpan sebagai PDF</button>
+  <button id="print-btn" onclick="window.print()" class="btn btn-primary" disabled>Menyiapkan dokumen…</button>
 </div>
 
-<div id="sheet" class="sheet">Memuat dokumen…</div>
+<div id="status-msg">Memuat dokumen…</div>
+<div id="paged-container"></div>
 
 <script src="/js/api.js"></script>
 <script src="/js/rich-editor.js"></script>
-<script>
-(async function () {
-  const id = new URLSearchParams(window.location.search).get("id");
-  const sheet = document.getElementById("sheet");
-  const backLink = document.getElementById("back-link");
-  backLink.href = id ? `/sop-detail.html?id=${id}` : "/sop-list.html";
+<script type="module">
+  import { Previewer } from "https://unpkg.com/pagedjs/dist/paged.esm.js";
 
-  try {
-    await api("/auth/me");
-  } catch {
-    window.location.href = "/index.html";
-    return;
-  }
+  (async function () {
+    const id = new URLSearchParams(window.location.search).get("id");
+    const statusMsg = document.getElementById("status-msg");
+    const backLink = document.getElementById("back-link");
+    backLink.href = id ? `/sop-detail.html?id=${id}` : "/sop-list.html";
 
-  let sop;
-  try {
-    sop = await api(`/sop/${id}`);
-  } catch (err) {
-    sheet.textContent = err.message;
-    return;
-  }
+    try {
+      await api("/auth/me");
+    } catch {
+      window.location.href = "/index.html";
+      return;
+    }
 
-  const year = sop.created_at ? new Date(sop.created_at).getFullYear() : new Date().getFullYear();
-  const docNumber = `SOP/${String(sop.id).padStart(4, "0")}/SMK-MUHADA/${year}`;
-  const onlineUrl = `${window.location.origin}/sop-detail.html?id=${sop.id}`;
-  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=0&data=${encodeURIComponent(onlineUrl)}`;
+    let sop;
+    try {
+      sop = await api(`/sop/${id}`);
+    } catch (err) {
+      statusMsg.textContent = err.message;
+      return;
+    }
 
-  sheet.innerHTML = `
-    <div class="doc-header">
-      <div class="doc-header-left">
-        <div class="doc-school-name">SMK MUHAMMADIYAH TODANAN</div>
-        <div class="doc-school-sub">Majelis Dikdasmen PNF PDM Kabupaten Blora</div>
-        <div class="doc-title">Dokumen Mutu — Standar Operasional Prosedur</div>
+    const year = sop.created_at ? new Date(sop.created_at).getFullYear() : new Date().getFullYear();
+    const docNumber = `SOP/${String(sop.id).padStart(4, "0")}/SMK-MUHADA/${year}`;
+    const onlineUrl = `${window.location.origin}/sop-detail.html?id=${sop.id}`;
+    const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=0&data=${encodeURIComponent(onlineUrl)}`;
+
+    const approvalVersion = (sop.versions || []).find((v) => v.status === "berlaku");
+    const kepalaSekolahName = (approvalVersion && approvalVersion.actor_name) || sop.kepalaSekolahName || "(Nama & Tanda Tangan)";
+    const preparerName = sop.preparer_name || sop.created_by_name;
+    const checkerName = sop.checker_name || "(Nama & Tanda Tangan)";
+
+    const sheetHtml = `
+      <div class="doc-header">
+        <div class="doc-header-left">
+          <div class="doc-school-name">SMK MUHAMMADIYAH TODANAN</div>
+          <div class="doc-school-sub">Majelis Dikdasmen PNF PDM Kabupaten Blora</div>
+          <div class="doc-title">Dokumen Mutu — Standar Operasional Prosedur</div>
+        </div>
+        <div class="doc-header-right">
+          <div class="doc-meta-row">No. Dokumen: ${docNumber}</div>
+          <div class="doc-meta-row">Bidang: ${sop.bidang}</div>
+          <div class="doc-meta-row">Revisi / Versi: ${sop.version}</div>
+          <div class="doc-meta-row">Tanggal Berlaku: ${sop.valid_until ? fmtDate(sop.valid_until) : "—"}</div>
+        </div>
+        <div class="doc-header-qr">
+          <img id="qr-img" src="${qrSrc}" alt="QR versi online">
+          <div class="qr-caption" id="qr-fallback" style="display:none;word-break:break-all">${onlineUrl}</div>
+        </div>
       </div>
-      <div class="doc-header-right">
-        <div class="doc-meta-row">No. Dokumen: ${docNumber}</div>
-        <div class="doc-meta-row">Bidang: ${sop.bidang}</div>
-        <div class="doc-meta-row">Revisi / Versi: ${sop.version}</div>
-        <div class="doc-meta-row">Tanggal Berlaku: ${sop.valid_until ? fmtDate(sop.valid_until) : "—"}</div>
-      </div>
-      <div class="doc-header-qr">
-        <img id="qr-img" src="${qrSrc}" alt="QR versi online">
-        <div class="qr-caption" id="qr-fallback" style="display:none;word-break:break-all">${onlineUrl}</div>
-        <div class="qr-caption" id="qr-caption-text">Pindai untuk versi online</div>
-      </div>
-    </div>
 
-    <div class="sop-title-line">${sop.title}</div>
+      <div class="sop-title-line">${sop.title}</div>
 
-    <div class="rich-content">${toDisplayHtml(sop.content) || "<p style='color:var(--muted)'>(Belum ada isi.)</p>"}</div>
+      <div class="rich-content">${toDisplayHtml(sop.content) || "<p style='color:#5B6663'>(Belum ada isi.)</p>"}</div>
 
-    <div class="sign-grid">
-      <div class="sign-box">
-        <div class="role">Disusun oleh</div>
-        <div class="name">${sop.created_by_name}</div>
-        <div class="sub">${sop.bidang}</div>
+      <div class="sign-grid">
+        <div class="sign-box">
+          <div class="role">Disusun oleh</div>
+          <div class="name">${preparerName}</div>
+          <div class="sub">${sop.bidang}</div>
+        </div>
+        <div class="sign-box">
+          <div class="role">Diperiksa oleh</div>
+          <div class="name">${checkerName}</div>
+          <div class="sub">Waka Terkait</div>
+        </div>
+        <div class="sign-box">
+          <div class="role">Disahkan oleh</div>
+          <div class="name">${kepalaSekolahName}</div>
+          <div class="sub">Kepala Sekolah</div>
+        </div>
       </div>
-      <div class="sign-box">
-        <div class="role">Diperiksa oleh</div>
-        <div class="name">(Nama &amp; Tanda Tangan)</div>
-        <div class="sub">Waka Terkait</div>
-      </div>
-      <div class="sign-box">
-        <div class="role">Disahkan oleh</div>
-        <div class="name">(Nama &amp; Tanda Tangan)</div>
-        <div class="sub">Kepala Sekolah</div>
-      </div>
-    </div>
-  `;
+    `;
 
-  const qrImg = document.getElementById("qr-img");
-  qrImg.addEventListener("error", () => {
-    qrImg.style.display = "none";
-    document.getElementById("qr-caption-text").style.display = "none";
-    document.getElementById("qr-fallback").style.display = "block";
-  });
-})();
+    statusMsg.textContent = "Menyusun halaman untuk cetak…";
+
+    const previewer = new Previewer();
+    await previewer.preview(sheetHtml, ["/css/style.css", "/css/print.css"], document.getElementById("paged-container"));
+
+    statusMsg.style.display = "none";
+    const printBtn = document.getElementById("print-btn");
+    printBtn.disabled = false;
+    printBtn.textContent = "Cetak / Simpan sebagai PDF";
+
+    const qrImg = document.getElementById("qr-img");
+    if (qrImg) {
+      qrImg.addEventListener("error", () => {
+        qrImg.style.display = "none";
+        document.getElementById("qr-fallback").style.display = "block";
+      });
+    }
+  })();
 </script>
 </body>
 </html>

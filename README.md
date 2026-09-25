@@ -157,6 +157,48 @@ Berubah: `schema.sql`, `functions/api/sop/index.js`, `functions/api/sop/[id].js`
 `public/js/sop-detail.js`, `public/users.html`, `public/js/users.js`,
 `public/css/style.css`, `public/sop-print.html`
 
+## Pembaruan: Nama Penyusun/Pemeriksa, Cetak PDF A4 dengan Nomor Halaman
+
+**Migrasi database (sederhana, cuma 2 baris)** — jalankan di D1 Console
+sebelum upload kode:
+
+```sql
+ALTER TABLE sop ADD COLUMN preparer_name TEXT;
+```
+```sql
+ALTER TABLE sop ADD COLUMN checker_name TEXT;
+```
+
+(Ada juga sebagai `migrations/003_add_preparer_checker_names.sql` di zip ini.)
+
+### Yang berubah
+
+- **Nama Penyusun & Nama Pemeriksa**: field baru saat membuat/mengedit draft
+  SOP. Nama Penyusun otomatis terisi nama Anda saat membuat draft baru
+  (bisa diubah).
+- **Nama Kepala Sekolah otomatis** di kolom "Disahkan oleh" pada cetakan:
+  kalau SOP sudah pernah disahkan, memakai nama Kepala Sekolah yang benar-
+  benar mengesahkan versi itu (dari riwayat versi); kalau belum, memakai
+  nama akun Kepala Sekolah yang aktif saat ini.
+- **Tulisan "Pindai untuk versi online" dihapus** dari bawah QR code —
+  QR code-nya sendiri tetap ada.
+- **Cetak/PDF sekarang pakai [Paged.js](https://pagedjs.org/)** — pustaka
+  khusus untuk masalah ini, karena browser sebenarnya tidak mendukung
+  nomor halaman ("Halaman X dari Y") secara native saat mencetak dari CSS
+  biasa. Hasilnya: ukuran A4 yang presisi, margin yang benar di setiap
+  halaman (termasuk halaman ke-2 dst. kalau SOP-nya panjang), dan footer
+  "Halaman X dari Y" otomatis di tiap halaman. Perlu koneksi internet saat
+  membuka halaman cetak (memuat Paged.js dari CDN unpkg.com).
+- File baru: `public/css/print.css` (aturan tampilan cetak, termasuk aturan
+  `@page` untuk ukuran A4, margin, dan nomor halaman).
+
+### Berkas yang baru/berubah pada pembaruan ini
+
+Baru: `migrations/003_add_preparer_checker_names.sql`, `public/css/print.css`
+
+Berubah: `schema.sql`, `functions/api/sop/index.js`, `functions/api/sop/[id].js`,
+`public/sop-new.html`, `public/js/sop-detail.js`, `public/sop-print.html`
+
 ## Fitur lain
 
 - **Format teks kaya**: kotak isi SOP (saat membuat/mengedit draft) mendukung

@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS sop (
                CHECK (status IN ('draft', 'menunggu_review', 'menunggu_persetujuan', 'berlaku', 'ditolak', 'kedaluwarsa')),
   valid_until  TEXT,                -- ISO date; NULL until disahkan
   created_by   INTEGER NOT NULL REFERENCES users(id),
+  preparer_name TEXT,               -- Nama Penyusun (defaults to created_by's name if blank)
+  checker_name  TEXT,               -- Nama Pemeriksa
   created_at   TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
 );

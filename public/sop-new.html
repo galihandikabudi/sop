@@ -27,6 +27,16 @@
         <label for="bidang">Bidang</label>
         <select id="bidang" required></select>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="field">
+          <label for="preparer_name">Nama Penyusun</label>
+          <input id="preparer_name" placeholder="Nama yang menyusun SOP ini">
+        </div>
+        <div class="field">
+          <label for="checker_name">Nama Pemeriksa</label>
+          <input id="checker_name" placeholder="mis. Waka terkait">
+        </div>
+      </div>
       <div class="field">
         <div style="display:flex;align-items:center;justify-content:space-between">
           <label style="margin-bottom:0">Isi SOP (Tujuan, Ruang Lingkup, Prosedur)</label>
@@ -63,6 +73,7 @@
     bidangSelect.innerHTML = `<option value="${user.bidang}">${user.bidang}</option>`;
     bidangSelect.disabled = true;
   }
+  document.getElementById("preparer_name").value = user.name;
 
   const contentEl = document.getElementById("content");
   const toolbarEl = document.getElementById("toolbar");
@@ -116,6 +127,8 @@
           title: document.getElementById("title").value,
           bidang: bidangSelect.value,
           content: contentEl.innerHTML,
+          preparer_name: document.getElementById("preparer_name").value,
+          checker_name: document.getElementById("checker_name").value,
         }),
       });
       window.location.href = `/sop-detail.html?id=${result.id}`;
