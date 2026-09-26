@@ -106,7 +106,7 @@
     checkerSelect.innerHTML =
       `<option value="">— Pilih Pemeriksa —</option>` +
       candidates
-        .map((u) => `<option value="${u.id}">${u.name}${u.role === "waka" ? ` (Waka ${u.bidang})` : " (Kepala Sekolah)"}</option>`)
+        .map((u) => `<option value="${u.id}">${u.name} (${u.role === "waka" ? wakaTitle(u.bidang, u.jabatan_label) : "Kepala Sekolah"})</option>`)
         .join("");
   }
   refreshCheckerOptions();

@@ -1,6 +1,10 @@
 // GET  /api/bidang            — list all bidang, any logged-in user (used
 //      to populate dropdowns: Ajukan SOP Baru, Tambah/Edit Pengguna, dst.)
-// POST /api/bidang { name, code? } — create a new bidang, Kepala Sekolah only
+// POST /api/bidang { name, code?, jabatan_label? } — create a new bidang,
+//      Kepala Sekolah only. `jabatan_label` overrides the default "Waka
+//      {bidang}" title shown everywhere for this bidang's waka account
+//      (mis. "Kepala Tata Usaha", "Bendahara", "Koordinator BKK") — leave
+//      empty to keep the "Waka {bidang}" default.
 import { getSessionUser, json, unauthorized, forbidden } from "../../../lib/auth.js";
 import { logActivity } from "../../../lib/log.js";
 
@@ -8,7 +12,7 @@ export async function onRequestGet({ request, env }) {
   const user = await getSessionUser(request, env);
   if (!user) return unauthorized();
 
-  const { results } = await env.DB.prepare("SELECT id, name, code FROM bidang ORDER BY name").all();
+  const { results } = await env.DB.prepare("SELECT id, name, code, jabatan_label FROM bidang ORDER BY name").all();
   return json(results);
 }
 
@@ -17,7 +21,7 @@ export async function onRequestPost({ request, env }) {
   if (!user) return unauthorized();
   if (user.role !== "kepala_sekolah") return forbidden("Hanya Kepala Sekolah yang dapat mengelola bidang.");
 
-  const { name, code } = await request.json().catch(() => ({}));
+  const { name, code, jabatan_label } = await request.json().catch(() => ({}));
   const trimmedName = (name || "").trim();
   if (!trimmedName) return json({ error: "Nama bidang tidak boleh kosong." }, 400);
 
@@ -27,9 +31,10 @@ export async function onRequestPost({ request, env }) {
   if (existing) return json({ error: "Bidang dengan nama itu sudah ada." }, 409);
 
   const trimmedCode = (code || "").trim().toUpperCase() || null;
+  const trimmedJabatanLabel = (jabatan_label || "").trim() || null;
 
-  const result = await env.DB.prepare("INSERT INTO bidang (name, code) VALUES (?, ?)")
-    .bind(trimmedName, trimmedCode)
+  const result = await env.DB.prepare("INSERT INTO bidang (name, code, jabatan_label) VALUES (?, ?, ?)")
+    .bind(trimmedName, trimmedCode, trimmedJabatanLabel)
     .run();
 
   await logActivity(env, {

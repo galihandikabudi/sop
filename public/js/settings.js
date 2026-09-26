@@ -17,6 +17,7 @@
   const closeBtn = document.getElementById("modal-close-btn");
   const nameInput = document.getElementById("name");
   const codeInput = document.getElementById("code");
+  const jabatanLabelInput = document.getElementById("jabatan_label");
   const errorEl = document.getElementById("error");
 
   let editingId = null;
@@ -47,6 +48,7 @@
     editingId = b.id;
     nameInput.value = b.name;
     codeInput.value = b.code || "";
+    jabatanLabelInput.value = b.jabatan_label || "";
     formTitle.textContent = `Edit Bidang — ${b.name}`;
     submitBtn.textContent = "Simpan Perubahan";
     deleteBtn.style.display = "";
@@ -69,6 +71,7 @@
       <tr style="cursor:default">
         <td style="font-weight:600">${b.name}</td>
         <td style="color:var(--muted)">${b.code || "—"}</td>
+        <td style="color:var(--muted)">${b.jabatan_label || `Waka ${b.name} (default)`}</td>
         <td style="text-align:right">
           <button class="btn" style="padding:6px 10px;font-size:12px" data-edit-id="${b.id}">Edit</button>
         </td>
@@ -104,7 +107,7 @@
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     errorEl.style.display = "none";
-    const payload = { name: nameInput.value, code: codeInput.value };
+    const payload = { name: nameInput.value, code: codeInput.value, jabatan_label: jabatanLabelInput.value };
     try {
       if (editingId) {
         await api(`/bidang/${editingId}`, { method: "PUT", body: JSON.stringify(payload) });

@@ -21,7 +21,7 @@
 
     <div class="card" style="padding:0;overflow:hidden">
       <table>
-        <thead><tr><th>Nama Bidang</th><th>Kode (untuk nomor dokumen)</th><th style="text-align:right">Aksi</th></tr></thead>
+        <thead><tr><th>Nama Bidang</th><th>Kode (untuk nomor dokumen)</th><th>Sebutan Jabatan</th><th style="text-align:right">Aksi</th></tr></thead>
         <tbody id="rows"></tbody>
       </table>
     </div>
@@ -42,6 +42,14 @@
       <label for="code">Kode Singkatan (opsional)</label>
       <input id="code" placeholder="mis. PERPUS — dipakai di nomor dokumen SOP" maxlength="10">
       <div style="font-size:11.5px;color:var(--muted)">Kalau dikosongkan, dibuat otomatis dari 3 huruf pertama nama bidang.</div>
+    </div>
+    <div class="field">
+      <label for="jabatan_label">Sebutan Jabatan (opsional)</label>
+      <input id="jabatan_label" placeholder="mis. Kepala Tata Usaha, Bendahara, Koordinator BKK">
+      <div style="font-size:11.5px;color:var(--muted)">
+        Dipakai untuk sebutan jabatan akun Waka di bidang ini — di dropdown Nama Pemeriksa, sidebar, dan dokumen cetak.
+        Kalau dikosongkan, tetap ditampilkan sebagai "Waka {nama bidang}" seperti biasa.
+      </div>
     </div>
     <div id="error" class="error-text" style="display:none"></div>
     <div style="display:flex;gap:10px;margin-top:4px">

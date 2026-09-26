@@ -6,11 +6,17 @@
 -- (tambah/ubah nama/hapus). `code` dipakai untuk kode singkatan di nomor
 -- dokumen resmi (lib/docNumber.js) — kalau kosong, dibuat otomatis dari
 -- 3 huruf pertama nama bidang.
+-- `jabatan_label` adalah sebutan jabatan pemegang bidang ini kalau BUKAN
+-- "Waka {bidang}" (mis. bidang "Tata Usaha" -> "Kepala Tata Usaha", bidang
+-- "Bendahara Sekolah" -> "Bendahara", bidang "BKK" -> "Koordinator BKK").
+-- Kalau kosong/NULL, seluruh aplikasi tetap memakai default "Waka {bidang}"
+-- di mana pun sebutan jabatan akun waka bidang ini ditampilkan.
 CREATE TABLE IF NOT EXISTS bidang (
-  id         INTEGER PRIMARY KEY AUTOINCREMENT,
-  name       TEXT NOT NULL UNIQUE,
-  code       TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  name          TEXT NOT NULL UNIQUE,
+  code          TEXT,
+  jabatan_label TEXT,
+  created_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 INSERT OR IGNORE INTO bidang (name, code) VALUES

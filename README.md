@@ -510,6 +510,55 @@ Baru: `functions/api/users/directory.js`, `migrations/008_checker_user_id.sql`
 Berubah: `schema.sql`, `functions/api/sop/index.js`, `functions/api/sop/[id].js`,
 `public/sop-new.html`, `public/js/sop-detail.js`, `public/js/waka-review.js`
 
+## Pembaruan: Sebutan Jabatan Kustom untuk Bidang (Bukan Selalu "Waka")
+
+Beberapa bidang punya pemegang jabatan yang bukan "Waka" secara harfiah —
+mis. Tata Usaha dipimpin **Kepala Tata Usaha**, Bendahara Sekolah cukup
+disebut **Bendahara**, BKK dikoordinasi **Koordinator BKK**. Sebelumnya
+aplikasi selalu menampilkan "Waka {bidang}" di mana pun (dropdown Nama
+Pemeriksa, sidebar, dokumen cetak) — sekarang sebutan itu bisa diatur
+sendiri per bidang.
+
+Di halaman **Pengaturan** (Kepala Sekolah), tiap bidang punya field baru
+**"Sebutan Jabatan" (opsional)**. Isi sesuai sebutan asli jabatannya:
+
+- Bidang **Tata Usaha** → isi **"Kepala Tata Usaha"**
+- Bidang **Bendahara Sekolah** → isi **"Bendahara"**
+- Bidang **BKK** → isi **"Koordinator BKK"**
+- Bidang lain (Kurikulum, Kesiswaan, Kaprodi TKR/TO, Kaprodi AKL, Sarana
+  & Prasarana, Publikasi) → **biarkan kosong**, tetap tampil default
+  **"Waka {bidang}"**
+
+Begitu diisi, sebutan itu otomatis dipakai di:
+
+- Dropdown **"Nama Pemeriksa"** (Ajukan SOP Baru & edit draf)
+- Label peran di **sidebar** dan halaman **Akun Saya**, untuk akun waka
+  bidang tersebut
+- Baris **"Diperiksa oleh"** di dokumen SOP yang dicetak/PDF
+
+Tidak ada perubahan pada logika persetujuan/alur SOP — akun-akun ini
+tetap `role: waka` di balik layar dengan hak yang sama seperti sebelumnya;
+ini murni mengubah sebutan yang ditampilkan.
+
+### Migrasi database yang perlu dijalankan
+
+Buka **D1 Console** di dashboard Cloudflare, lalu jalankan statement ini
+(cukup satu):
+
+```sql
+ALTER TABLE bidang ADD COLUMN jabatan_label TEXT;
+```
+
+### Berkas yang baru/berubah pada pembaruan ini
+
+Baru: `migrations/009_bidang_jabatan_label.sql`
+
+Berubah: `schema.sql`, `lib/auth.js`, `functions/api/bidang/index.js`,
+`functions/api/bidang/[id].js`, `functions/api/users/directory.js`,
+`functions/api/sop/[id].js`, `public/js/api.js`, `public/js/sidebar.js`,
+`public/js/account.js`, `public/js/settings.js`, `public/settings.html`,
+`public/sop-new.html`, `public/js/sop-detail.js`, `public/sop-print.html`
+
 ## Pembaruan: Instruksi Tambahan untuk AI, Kepala Sekolah Bisa Pilih Pemeriksa
 
 Di halaman **Ajukan SOP Baru**, ada kotak teks baru **"Instruksi tambahan

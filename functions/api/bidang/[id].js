@@ -19,7 +19,7 @@ export async function onRequestPut({ request, env, params }) {
   const existing = await env.DB.prepare("SELECT * FROM bidang WHERE id = ?").bind(bidangId).first();
   if (!existing) return json({ error: "Bidang tidak ditemukan." }, 404);
 
-  const { name, code } = await request.json().catch(() => ({}));
+  const { name, code, jabatan_label } = await request.json().catch(() => ({}));
   const trimmedName = (name || "").trim();
   if (!trimmedName) return json({ error: "Nama bidang tidak boleh kosong." }, 400);
 
@@ -29,10 +29,11 @@ export async function onRequestPut({ request, env, params }) {
   if (clash) return json({ error: "Bidang dengan nama itu sudah ada." }, 409);
 
   const trimmedCode = (code || "").trim().toUpperCase() || null;
+  const trimmedJabatanLabel = (jabatan_label || "").trim() || null;
   const oldName = existing.name;
 
   await env.DB.batch([
-    env.DB.prepare("UPDATE bidang SET name = ?, code = ? WHERE id = ?").bind(trimmedName, trimmedCode, bidangId),
+    env.DB.prepare("UPDATE bidang SET name = ?, code = ?, jabatan_label = ? WHERE id = ?").bind(trimmedName, trimmedCode, trimmedJabatanLabel, bidangId),
     env.DB.prepare("UPDATE users SET bidang = ? WHERE bidang = ?").bind(trimmedName, oldName),
     env.DB.prepare("UPDATE sop SET bidang = ? WHERE bidang = ?").bind(trimmedName, oldName),
     env.DB.prepare("UPDATE doc_number_counters SET bidang = ? WHERE bidang = ?").bind(trimmedName, oldName),

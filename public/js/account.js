@@ -7,7 +7,7 @@ const ROLE_LABEL_ACCOUNT = { kepala_sekolah: "Kepala Sekolah", waka: "Waka Bidan
 
   document.getElementById("info-email").textContent = user.email;
   document.getElementById("info-role").textContent =
-    (ROLE_LABEL_ACCOUNT[user.role] || user.role) + (user.bidang ? ` · ${user.bidang}` : "");
+    user.role === "waka" ? wakaTitle(user.bidang, user.jabatan_label) : (ROLE_LABEL_ACCOUNT[user.role] || user.role) + (user.bidang ? ` · ${user.bidang}` : "");
   document.getElementById("name").value = user.name;
 
   const form = document.getElementById("form");

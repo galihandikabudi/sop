@@ -174,7 +174,7 @@
           candidates
             .map(
               (u) =>
-                `<option value="${u.id}">${u.name}${u.role === "waka" ? ` (Waka ${u.bidang})` : " (Kepala Sekolah)"}</option>`
+                `<option value="${u.id}">${u.name} (${u.role === "waka" ? wakaTitle(u.bidang, u.jabatan_label) : "Kepala Sekolah"})</option>`
             )
             .join("");
         checkerSelect.value = hasCurrentId && currentId ? String(currentId) : showLegacyOption ? "legacy" : "";

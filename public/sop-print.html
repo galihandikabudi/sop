@@ -106,6 +106,17 @@
     const kepalaSekolahName = (approvalVersion && approvalVersion.actor_name) || sop.kepalaSekolahName || "(Nama & Tanda Tangan)";
     const preparerName = sop.preparer_name || sop.created_by_name;
     const checkerName = sop.checker_name || "(Nama & Tanda Tangan)";
+    // Sebutan jabatan pemeriksa: pakai data akun yang tertaut (checker_role/
+    // checker_bidang/checker_jabatan_label) kalau ada, supaya sesuai sebutan
+    // asli (mis. "Kepala Tata Usaha", bukan selalu "Waka Terkait"). Untuk
+    // data lama yang cuma punya nama bebas tanpa akun tertaut, tetap pakai
+    // teks generik "Waka Terkait" seperti sebelumnya.
+    const checkerSub =
+      sop.checker_role === "kepala_sekolah"
+        ? "Kepala Sekolah"
+        : sop.checker_role === "waka"
+        ? wakaTitle(sop.checker_bidang, sop.checker_jabatan_label)
+        : "Waka Terkait";
 
     const sheetHtml = `
       <div class="doc-header">
@@ -139,7 +150,7 @@
         <div class="sign-box">
           <div class="role">Diperiksa oleh</div>
           <div class="name">${checkerName}</div>
-          <div class="sub">Waka Terkait</div>
+          <div class="sub">${checkerSub}</div>
         </div>
         <div class="sign-box">
           <div class="role">Disahkan oleh</div>

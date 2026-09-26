@@ -4,9 +4,17 @@ import { getSessionUser, json, unauthorized, forbidden } from "../../../lib/auth
 import { logActivity } from "../../../lib/log.js";
 
 async function loadSop(env, id) {
+  // checker_role/checker_bidang/checker_jabatan_label describe whoever is
+  // recorded as checker_user_id — used by the print page to show the right
+  // job title under "Diperiksa oleh" (mis. "Kepala Tata Usaha" instead of a
+  // hardcoded "Waka Terkait") instead of guessing from the SOP's own bidang.
   return env.DB.prepare(
-    `SELECT s.*, u.name AS created_by_name
-     FROM sop s JOIN users u ON u.id = s.created_by
+    `SELECT s.*, u.name AS created_by_name,
+            cu.role AS checker_role, cu.bidang AS checker_bidang, cb.jabatan_label AS checker_jabatan_label
+     FROM sop s
+     JOIN users u ON u.id = s.created_by
+     LEFT JOIN users cu ON cu.id = s.checker_user_id
+     LEFT JOIN bidang cb ON cb.name = cu.bidang
      WHERE s.id = ?`
   ).bind(id).first();
 }

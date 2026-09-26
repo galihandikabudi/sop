@@ -24,7 +24,11 @@ async function renderSidebar() {
   }
 
   const roleLabel =
-    user.role === "kepala_sekolah" ? "Kepala Sekolah" : user.role === "waka" ? `Waka · ${user.bidang}` : user.bidang;
+    user.role === "kepala_sekolah"
+      ? "Kepala Sekolah"
+      : user.role === "waka"
+      ? wakaTitle(user.bidang, user.jabatan_label)
+      : user.bidang;
 
   document.getElementById("sidebar").innerHTML = `
     <div>
