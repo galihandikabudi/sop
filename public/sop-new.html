@@ -48,6 +48,7 @@
             Buat Draf dengan AI
           </button>
         </div>
+        <textarea id="ai-prompt" rows="2" placeholder="Instruksi tambahan untuk AI (opsional) — mis. tekankan langkah verifikasi berkas, sebutkan pihak yang terlibat, atau gaya penulisan tertentu" style="margin-bottom:10px"></textarea>
         <div class="editor-toolbar" id="toolbar"></div>
         <div id="content" class="rich-editor" contenteditable="true"></div>
         <div id="ai-status" style="font-size:12.5px;color:var(--muted);display:none;margin-top:6px"></div>
@@ -143,9 +144,10 @@
     statusEl.textContent = "AI sedang menyusun draf…";
 
     try {
+      const instruksiVal = document.getElementById("ai-prompt").value.trim();
       const result = await api("/sop/generate-ai", {
         method: "POST",
-        body: JSON.stringify({ title: titleVal, bidang: bidangSelect.value }),
+        body: JSON.stringify({ title: titleVal, bidang: bidangSelect.value, instruksi: instruksiVal || undefined }),
       });
       contentEl.innerHTML = autoFormatSopHtml(result.content);
       statusEl.textContent = "Draf dibuat oleh AI — tinjau dan sesuaikan sebelum diajukan.";

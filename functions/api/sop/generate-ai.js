@@ -1,4 +1,4 @@
-// POST /api/sop/generate-ai  { title, bidang }
+// POST /api/sop/generate-ai  { title, bidang, instruksi? }
 // Drafts SOP content (Tujuan, Ruang Lingkup, Prosedur, dst.) in the school's
 // "Muhada Berdaya" tone of voice. Uses whichever AI backend is configured:
 //   1. Claude (Anthropic API) — best quality, needs ANTHROPIC_API_KEY secret.
@@ -67,12 +67,18 @@ export async function onRequestPost({ request, env }) {
   const user = await getSessionUser(request, env);
   if (!user) return unauthorized();
 
-  const { title, bidang } = await request.json().catch(() => ({}));
+  const { title, bidang, instruksi } = await request.json().catch(() => ({}));
   if (!title || !bidang) {
     return json({ error: "Judul dan bidang wajib diisi sebelum membuat draf AI." }, 400);
   }
 
-  const userPrompt = `Buatkan draf SOP dengan judul: "${title}"\nBidang: ${bidang}`;
+  let userPrompt = `Buatkan draf SOP dengan judul: "${title}"\nBidang: ${bidang}`;
+  // Instruksi tambahan dari pengguna (mis. langkah tertentu yang perlu
+  // ditekankan) — opsional, ditambahkan di prompt tapi tidak boleh
+  // mengubah format keluaran yang sudah ditentukan di BRAND_CONTEXT.
+  if (instruksi && String(instruksi).trim()) {
+    userPrompt += `\n\nInstruksi tambahan dari pengguna (ikuti selama tidak bertentangan dengan format yang sudah ditentukan): ${String(instruksi).trim()}`;
+  }
 
   try {
     let content;

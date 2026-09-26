@@ -510,6 +510,53 @@ Baru: `functions/api/users/directory.js`, `migrations/008_checker_user_id.sql`
 Berubah: `schema.sql`, `functions/api/sop/index.js`, `functions/api/sop/[id].js`,
 `public/sop-new.html`, `public/js/sop-detail.js`, `public/js/waka-review.js`
 
+## Pembaruan: Instruksi Tambahan untuk AI, Kepala Sekolah Bisa Pilih Pemeriksa
+
+Di halaman **Ajukan SOP Baru**, ada kotak teks baru **"Instruksi tambahan
+untuk AI"** tepat di atas kotak isi SOP. Isi kotak ini opsional — kalau
+diisi (mis. "tekankan langkah verifikasi berkas oleh Waka Kesiswaan"),
+instruksi itu ikut dikirim ke AI saat tombol **"Buat Draf dengan AI"**
+ditekan, supaya hasilnya lebih sesuai kebutuhan tanpa mengubah format
+baku SOP (Tujuan/Ruang Lingkup/Prosedur) yang sudah ditentukan.
+
+Selain itu, dropdown **"Nama Pemeriksa"** sudah bisa dipakai juga oleh
+akun **Kepala Sekolah** saat mengajukan SOP: pilih dulu **Bidang** untuk
+SOP tersebut, dropdown Pemeriksa otomatis menampilkan **Waka bidang itu**
+untuk dipilih (opsional, tidak wajib seperti pada pengajuan oleh Waka).
+
+### Berkas yang berubah pada pembaruan ini
+
+`functions/api/sop/generate-ai.js`, `public/sop-new.html`
+
+## Pembaruan: Pustaka SOP (Semua Guru Bisa Akses SOP yang Berlaku)
+
+Halaman baru **"Pustaka SOP"** muncul di menu sidebar untuk **semua
+pengguna yang login** — apa pun perannya (staf/guru, Waka, Kepala
+Sekolah) dan bidangnya. Halaman ini menampilkan **hanya SOP yang sudah
+disahkan (status "Berlaku")**, lintas bidang, lengkap dengan:
+
+- **Pencarian judul** SOP
+- **Filter Bidang** (dropdown, otomatis mengikuti daftar bidang yang
+  dikelola di halaman Pengaturan)
+
+Ini berbeda dari halaman **"Daftar SOP"** yang sudah ada, yang tetap
+dibatasi ke bidang pengguna sendiri dan menampilkan semua status
+(termasuk draft/pengajuan) — "Daftar SOP" untuk kerja sehari-hari
+menyusun/meninjau SOP, "Pustaka SOP" untuk semua orang mencari dan
+membaca SOP resmi yang berlaku.
+
+Mengklik satu baris di Pustaka SOP membuka halaman detail SOP seperti
+biasa (bisa dicetak/PDF dari sana). Untuk itu, aturan akses halaman
+detail SOP juga disesuaikan: **SOP berstatus "Berlaku" sekarang bisa
+dibuka siapa pun yang login, lintas bidang** — draft dan pengajuan yang
+belum disahkan tetap dibatasi seperti sebelumnya.
+
+### Berkas yang baru/berubah pada pembaruan ini
+
+Baru: `functions/api/sop/published.js`, `public/pustaka-sop.html`, `public/js/pustaka-sop.js`
+
+Berubah: `functions/api/sop/[id].js`, `public/js/sidebar.js`
+
 ## Pembaruan: Waka Tidak Meninjau Pengajuannya Sendiri
 
 Kalau yang mengajukan SOP adalah seorang **Waka**, dua aturan baru berlaku:

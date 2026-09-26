@@ -18,7 +18,12 @@ export async function onRequestGet({ request, env, params }) {
   const sop = await loadSop(env, params.id);
   if (!sop) return json({ error: "SOP tidak ditemukan." }, 404);
   const isNamedChecker = user.role === "waka" && sop.checker_user_id === user.id;
-  if (user.role !== "kepala_sekolah" && sop.bidang !== user.bidang && !isNamedChecker) return forbidden();
+  // SOP yang sudah berlaku (disahkan) adalah dokumen resmi sekolah — boleh
+  // dibaca semua pengguna yang login, lintas bidang (ini yang membuat
+  // Pustaka SOP bisa menautkan ke halaman detailnya). Draft/pengajuan yang
+  // belum berlaku tetap dibatasi seperti biasa.
+  const isPublished = sop.status === "berlaku";
+  if (user.role !== "kepala_sekolah" && sop.bidang !== user.bidang && !isNamedChecker && !isPublished) return forbidden();
 
   const { results: versions } = await env.DB.prepare(
     `SELECT sv.version, sv.status, sv.note, sv.created_at, u.name AS actor_name
