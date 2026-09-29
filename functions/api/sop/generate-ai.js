@@ -13,7 +13,9 @@ const BRAND_CONTEXT = `Anda membantu menyusun draf SOP (Standard Operating Proce
 
 Ikuti gaya bahasa dan nilai brand sekolah, "Muhada Berdaya": profesional, hangat, membangun (empowering), dan berlandaskan nilai keislaman serta kemuhammadiyahan. Bila relevan dengan isi SOP, cerminkan semangat lima dimensi Muhada Berdaya berikut secara wajar (tanpa menyebutnya secara eksplisit sebagai istilah teknis jika tidak perlu): Berdaya Budi (karakter & akhlak), Berdaya Pikir (nalar & kompetensi), Berdaya Cipta (kreativitas & inovasi), Berdaya Saing (profesionalisme & daya saing), Berdaya Sosial (kepedulian & kontribusi sosial).
 
-Tulis draf SOP dalam Bahasa Indonesia baku dan formal ala dokumen administrasi sekolah, TANPA markdown dan TANPA tanda bintang, dengan format persis berikut:
+Tulis draf SOP dalam Bahasa Indonesia baku dan formal ala dokumen administrasi sekolah, TANPA markdown dan TANPA tanda bintang. Gunakan heading berupa satu angka diikuti titik dan judul singkat (persis seperti "1. Tujuan", bukan "1) Tujuan" atau "Tujuan:"), dengan urutan angka berlanjut tanpa putus dari awal sampai akhir dokumen — ini penting karena sistem akan otomatis menebalkan setiap baris yang berformat seperti itu sebagai judul bagian.
+
+Tiga bagian pertama WAJIB selalu ada, dengan urutan dan isi berikut:
 
 1. Tujuan
 (satu paragraf singkat)
@@ -24,7 +26,9 @@ Tulis draf SOP dalam Bahasa Indonesia baku dan formal ala dokumen administrasi s
 3. Prosedur
 (langkah-langkah bernomor seperti 3.1, 3.2, dst. — realistis, bisa dieksekusi staf sekolah, sekitar 5-8 langkah)
 
-Jangan mengarang nama orang, tanggal, atau nomor Surat Keputusan (SK) — gunakan placeholder seperti [Nama Jabatan] atau [Nomor SK] bila diperlukan. Jangan menambahkan judul dokumen atau kalimat pembuka di luar format di atas.`;
+Setelah bagian 3, LANJUTKAN penomoran ke 4, 5, dan seterusnya (jangan berhenti di angka 3) dengan menambahkan bagian-bagian lain yang relevan dengan judul SOP ini bila memang diperlukan — misalnya "4. Ketentuan Lain", "4. Pihak Terkait", "5. Penutup", atau "6. Lampiran/Referensi". Tidak semua SOP perlu bagian tambahan ini; tambahkan hanya yang benar-benar relevan dengan topiknya, dan jangan mengarang isi yang tidak perlu hanya demi menambah jumlah bagian.
+
+Jangan mengarang nama orang, tanggal, atau nomor Surat Keputusan (SK) — gunakan placeholder seperti [Nama Jabatan] atau [Nomor SK] bila diperlukan. Jangan menambahkan judul dokumen atau kalimat pembuka sebelum bagian "1. Tujuan".`;
 
 async function generateWithClaude(env, userPrompt) {
   const res = await fetch("https://api.anthropic.com/v1/messages", {

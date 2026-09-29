@@ -7,8 +7,12 @@ function escapeHtml(str) {
 }
 
 // Turns plain text into simple HTML paragraphs, automatically making
-// top-level numbered section headers (e.g. "1. Tujuan", "2. Ruang Lingkup")
-// bold and larger — but leaving sub-steps like "3.1 ..." as normal text.
+// top-level numbered section headers (e.g. "1. Tujuan", "2. Ruang Lingkup",
+// "3. Prosedur", "4. Ketentuan Lain", "5. Penutup", dst.) bold and larger —
+// but leaving sub-steps like "3.1 ..." as normal text. The numbering isn't
+// capped at 3 — any single number 1-99 followed by ". " at the start of a
+// line is treated as a top-level heading, so the section list can keep
+// growing (4, 5, 6, ...) without losing the bold-heading formatting.
 function autoFormatSopHtml(text) {
   const lines = String(text || "").split(/\r?\n/);
   let html = "";
@@ -37,7 +41,7 @@ function richEditorToolbarHtml() {
     <button type="button" data-cmd="underline" title="Garis bawah"><u>U</u></button>
     <button type="button" data-cmd="insertUnorderedList" title="Daftar bullet">• List</button>
     <button type="button" data-cmd="insertOrderedList" title="Daftar bernomor">1. List</button>
-    <button type="button" id="auto-format-btn" title="Format otomatis judul bernomor (1. 2. 3. ...)">Format Otomatis</button>
+    <button type="button" id="auto-format-btn" title="Format otomatis judul bernomor (1. 2. 3. 4. dan seterusnya)">Format Otomatis</button>
   `;
 }
 

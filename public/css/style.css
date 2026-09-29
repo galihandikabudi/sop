@@ -151,6 +151,18 @@ tbody tr:last-child td { border-bottom: none; }
 tbody tr { cursor: pointer; }
 tbody tr:hover { background: #F8F9FC; }
 
+/* Baris filter di bawah judul kolom tabel — dipakai untuk memfilter
+   langsung dari kepala tabel (mis. Pustaka SOP, Daftar SOP Berlaku publik). */
+thead tr.filter-row th {
+  padding: 8px 12px; background: #FFFFFF; text-transform: none;
+  font-weight: 400; letter-spacing: normal;
+}
+thead tr.filter-row input, thead tr.filter-row select {
+  width: 100%; box-sizing: border-box; font-size: 12.5px; font-weight: 400;
+  padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px;
+  color: var(--ink, inherit); background: #fff;
+}
+
 .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .field label { font-size: 13px; font-weight: 600; }
 .field input, .field select, .field textarea {

@@ -752,6 +752,56 @@ aturan status di sisi server dan tampilan di sisi Kepala Sekolah.
 `functions/api/sop/[id]/approve.js`, `functions/api/sop/[id]/reject.js`,
 `public/js/approvals.js`, `public/js/sidebar.js`
 
+## Pembaruan: Filter Langsung dari Kepala Tabel (Pustaka SOP & Daftar Publik)
+
+Di halaman **Pustaka SOP** (untuk pengguna login) dan **Daftar SOP Berlaku**
+publik (`/list`), kotak pencarian/filter yang tadinya berada di atas tabel
+kini dipindah **langsung ke bawah judul setiap kolom tabel** — jadi
+memfilter berdasarkan Judul, Bidang, No. Dokumen, Versi, atau Berlaku Mulai
+bisa dilakukan langsung dari kolom yang relevan:
+
+- **Judul SOP** — kotak teks pencarian judul.
+- **Bidang** — dropdown pilihan bidang.
+- **No. Dokumen**, **Versi**, **Berlaku Mulai** — kotak teks pencarian per
+  kolom (mencocokkan sebagian teks, termasuk tanggal yang sudah diformat).
+
+Semua filter bisa dipakai bersamaan (mis. bidang tertentu + kata kunci
+judul + potongan tahun berlaku), dan tabel diperbarui otomatis saat isian
+diubah. Tidak ada perubahan skema database maupun API.
+
+### Berkas yang berubah pada pembaruan ini
+
+`public/pustaka-sop.html`, `public/js/pustaka-sop.js`, `public/list.html`,
+`public/css/style.css`
+
+## Pembaruan: Formatting Judul Bernomor Tidak Lagi Berhenti di Angka 3
+
+Sistem "Format Otomatis" (tombol di toolbar kotak isi SOP) sebenarnya sudah
+bisa menebalkan judul bagian bernomor berapa pun (1, 2, 3, 4, 5, dst.) —
+yang membatasi hanya sampai angka 3 selama ini adalah instruksi ke AI saat
+membuat draf otomatis, yang secara eksplisit hanya meminta 3 bagian
+(Tujuan, Ruang Lingkup, Prosedur) dan melarang menambah apa pun di luar
+itu. Sekarang instruksinya diperbaiki:
+
+- Tiga bagian pertama (**1. Tujuan**, **2. Ruang Lingkup**, **3. Prosedur**)
+  tetap wajib selalu ada seperti sebelumnya.
+- AI sekarang diminta **melanjutkan penomoran ke 4, 5, dan seterusnya**
+  bila topik SOP-nya memang membutuhkan bagian tambahan — misalnya
+  "4. Ketentuan Lain", "4. Pihak Terkait", "5. Penutup", atau
+  "6. Lampiran/Referensi" — bukan berhenti setelah Prosedur.
+- Tidak dipaksakan: AI hanya menambah bagian lanjutan yang benar-benar
+  relevan, bukan mengarang isi demi menambah jumlah bagian.
+- Kalau Anda menulis atau menambah bagian bernomor sendiri secara manual
+  (mis. mengetik "4. Ketentuan Lain" lalu menekan tombol **Format
+  Otomatis**), bagian itu ikut ditebalkan sebagai judul, sama seperti
+  bagian 1-3 — ini sudah berjalan sejak awal dan tidak berubah.
+
+Tidak ada perubahan skema database untuk pembaruan ini.
+
+### Berkas yang berubah pada pembaruan ini
+
+`functions/api/sop/generate-ai.js`, `public/js/rich-editor.js`
+
 ## Fitur lain
 
 - **Format teks kaya**: kotak isi SOP (saat membuat/mengedit draft) mendukung
