@@ -24,16 +24,22 @@
   <h1 class="serif" style="font-size:24px;margin:0 0 6px">Daftar SOP Berlaku</h1>
   <div style="color:var(--muted);font-size:13.5px;margin-bottom:20px" id="sub-count">Memuat daftar SOP…</div>
 
+  <div style="display:flex;gap:12px;margin-bottom:16px">
+    <input id="search" type="text" placeholder="Cari judul SOP…" class="card" style="flex:1;border:1px solid var(--border);padding:10px 14px">
+    <select id="filter-bidang" class="card" style="border:1px solid var(--border);padding:10px 14px">
+      <option value="">Semua Bidang</option>
+    </select>
+  </div>
+
   <div class="card" style="padding:0;overflow:hidden">
     <table>
       <thead>
-        <tr><th>Judul SOP</th><th>Bidang</th><th>No. Dokumen</th><th>Versi</th><th>Berlaku Mulai</th></tr>
-        <tr class="filter-row">
-          <th><input id="search" type="text" placeholder="Cari judul…"></th>
-          <th><select id="filter-bidang"><option value="">Semua Bidang</option></select></th>
-          <th><input id="filter-doc" type="text" placeholder="Cari no. dokumen…"></th>
-          <th><input id="filter-version" type="text" placeholder="Cari versi…"></th>
-          <th><input id="filter-date" type="text" placeholder="Cari tanggal…"></th>
+        <tr>
+          <th class="sortable" data-sort="title">Judul SOP <span class="sort-arrow">↕</span></th>
+          <th class="sortable" data-sort="bidang">Bidang <span class="sort-arrow">↕</span></th>
+          <th class="sortable" data-sort="doc_number">No. Dokumen <span class="sort-arrow">↕</span></th>
+          <th class="sortable" data-sort="version">Versi <span class="sort-arrow">↕</span></th>
+          <th class="sortable" data-sort="valid_from">Berlaku Mulai <span class="sort-arrow">↕</span></th>
         </tr>
       </thead>
       <tbody id="rows"></tbody>
@@ -54,12 +60,9 @@
 
   const rowsEl = document.getElementById("rows");
   const subCount = document.getElementById("sub-count");
-  // Filter langsung dari kepala tabel: satu input/select per kolom.
   const searchEl = document.getElementById("search");
   const bidangEl = document.getElementById("filter-bidang");
-  const docEl = document.getElementById("filter-doc");
-  const versionEl = document.getElementById("filter-version");
-  const dateEl = document.getElementById("filter-date");
+  const sortableHeaders = document.querySelectorAll("th.sortable");
 
   let allSops = [];
 
@@ -75,25 +78,55 @@
   const bidangNames = [...new Set(allSops.map((s) => s.bidang))].sort();
   bidangEl.innerHTML += bidangNames.map((b) => `<option value="${b}">${b}</option>`).join("");
 
+  // Urutan default: judul, A→Z.
+  let sortKey = "title";
+  let sortDir = "asc";
+
+  function applySort(list) {
+    return [...list].sort((a, b) => {
+      let va = a[sortKey];
+      let vb = b[sortKey];
+      if (sortKey === "version") {
+        va = Number(va) || 0;
+        vb = Number(vb) || 0;
+      } else if (sortKey === "valid_from") {
+        va = va || "";
+        vb = vb || "";
+      } else {
+        va = (va || "").toString().toLowerCase();
+        vb = (vb || "").toString().toLowerCase();
+      }
+      if (va < vb) return sortDir === "asc" ? -1 : 1;
+      if (va > vb) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+  }
+
+  function updateSortIndicators() {
+    sortableHeaders.forEach((th) => {
+      if (th.dataset.sort === sortKey) {
+        th.dataset.sortDir = sortDir;
+        th.querySelector(".sort-arrow").textContent = sortDir === "asc" ? "↑" : "↓";
+      } else {
+        th.removeAttribute("data-sort-dir");
+        th.querySelector(".sort-arrow").textContent = "↕";
+      }
+    });
+  }
+
   function render() {
     const q = searchEl.value.trim().toLowerCase();
     const bidang = bidangEl.value;
-    const doc = docEl.value.trim().toLowerCase();
-    const version = versionEl.value.trim().toLowerCase();
-    const date = dateEl.value.trim().toLowerCase();
     const filtered = allSops.filter(
-      (s) =>
-        (!q || s.title.toLowerCase().includes(q)) &&
-        (!bidang || s.bidang === bidang) &&
-        (!doc || (s.doc_number || "").toLowerCase().includes(doc)) &&
-        (!version || String(s.version).toLowerCase().includes(version)) &&
-        (!date || fmtDate(s.valid_from).toLowerCase().includes(date))
+      (s) => (!q || s.title.toLowerCase().includes(q)) && (!bidang || s.bidang === bidang)
     );
+    const sorted = applySort(filtered);
+    updateSortIndicators();
 
-    subCount.textContent = `${filtered.length} SOP berlaku ditemukan`;
+    subCount.textContent = `${sorted.length} SOP berlaku ditemukan`;
 
     rowsEl.innerHTML =
-      filtered
+      sorted
         .map(
           (s) => `
       <tr onclick="window.location.href='/sop-public.html?id=${s.id}'">
@@ -107,7 +140,19 @@
         .join("") || `<tr><td colspan="5" class="empty-state">Belum ada SOP yang berlaku dan cocok dengan pencarian.</td></tr>`;
   }
 
-  [searchEl, docEl, versionEl, dateEl].forEach((el) => el.addEventListener("input", render));
+  sortableHeaders.forEach((th) => {
+    th.addEventListener("click", () => {
+      if (sortKey === th.dataset.sort) {
+        sortDir = sortDir === "asc" ? "desc" : "asc";
+      } else {
+        sortKey = th.dataset.sort;
+        sortDir = "asc";
+      }
+      render();
+    });
+  });
+
+  searchEl.addEventListener("input", render);
   bidangEl.addEventListener("change", render);
   render();
 })();

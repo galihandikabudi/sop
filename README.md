@@ -752,22 +752,22 @@ aturan status di sisi server dan tampilan di sisi Kepala Sekolah.
 `functions/api/sop/[id]/approve.js`, `functions/api/sop/[id]/reject.js`,
 `public/js/approvals.js`, `public/js/sidebar.js`
 
-## Pembaruan: Filter Langsung dari Kepala Tabel (Pustaka SOP & Daftar Publik)
+## Pembaruan: Kolom Tabel Bisa Diklik untuk Mengurutkan (Pustaka SOP & Daftar Publik)
 
 Di halaman **Pustaka SOP** (untuk pengguna login) dan **Daftar SOP Berlaku**
-publik (`/list`), kotak pencarian/filter yang tadinya berada di atas tabel
-kini dipindah **langsung ke bawah judul setiap kolom tabel** — jadi
-memfilter berdasarkan Judul, Bidang, No. Dokumen, Versi, atau Berlaku Mulai
-bisa dilakukan langsung dari kolom yang relevan:
+publik (`/list`):
 
-- **Judul SOP** — kotak teks pencarian judul.
-- **Bidang** — dropdown pilihan bidang.
-- **No. Dokumen**, **Versi**, **Berlaku Mulai** — kotak teks pencarian per
-  kolom (mencocokkan sebagian teks, termasuk tanggal yang sudah diformat).
+- Tetap satu **kotak pencarian judul** dan satu **dropdown filter Bidang**
+  di atas tabel, seperti versi semula (percobaan sebelumnya yang memindahkan
+  filter ke baris tambahan di bawah judul kolom sudah dibatalkan).
+- Yang baru: setiap **judul kolom tabel** (Judul SOP, Bidang, No. Dokumen,
+  Versi, Berlaku Mulai) sekarang bisa **diklik untuk mengurutkan** isi
+  tabel berdasarkan kolom itu — ikon ↕ di sebelah judul kolom berubah jadi
+  ↑/↓ sesuai arah urutan aktif. Klik sekali untuk urutan naik (A→Z / kecil
+  ke besar), klik lagi pada kolom yang sama untuk membalik urutan.
+- Urutan default saat halaman dibuka: Judul SOP, A→Z.
 
-Semua filter bisa dipakai bersamaan (mis. bidang tertentu + kata kunci
-judul + potongan tahun berlaku), dan tabel diperbarui otomatis saat isian
-diubah. Tidak ada perubahan skema database maupun API.
+Tidak ada perubahan skema database maupun API untuk pembaruan ini.
 
 ### Berkas yang berubah pada pembaruan ini
 

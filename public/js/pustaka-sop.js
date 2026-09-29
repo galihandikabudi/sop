@@ -1,45 +1,72 @@
 // public/js/pustaka-sop.js
 // Halaman "Pustaka SOP" — daftar semua SOP yang sudah berlaku (disahkan),
-// bisa diakses siapa pun yang login, lintas bidang, dengan pencarian judul
-// dan filter bidang. Beda dari "Daftar SOP" yang dibatasi ke bidang sendiri
-// dan menampilkan semua status termasuk draft/pengajuan.
+// bisa diakses siapa pun yang login, lintas bidang, dengan pencarian judul,
+// filter bidang, dan tabel yang bisa diurutkan dengan mengklik judul kolom.
+// Beda dari "Daftar SOP" yang dibatasi ke bidang sendiri dan menampilkan
+// semua status termasuk draft/pengajuan.
 (async function () {
   const user = await renderSidebar();
   if (!user) return;
 
   const rowsEl = document.getElementById("rows");
   const subCount = document.getElementById("sub-count");
-  // Filter langsung dari kepala tabel: satu input/select per kolom.
   const searchEl = document.getElementById("search");
   const bidangEl = document.getElementById("filter-bidang");
-  const docEl = document.getElementById("filter-doc");
-  const versionEl = document.getElementById("filter-version");
-  const dateEl = document.getElementById("filter-date");
+  const sortableHeaders = document.querySelectorAll("th.sortable");
 
   const bidangNames = await fetchBidangNames();
   bidangEl.innerHTML += bidangNames.map((b) => `<option value="${b}">${b}</option>`).join("");
 
+  // Urutan default: judul, A→Z.
+  let sortKey = "title";
+  let sortDir = "asc";
+
+  function applySort(list) {
+    const sorted = [...list].sort((a, b) => {
+      let va = a[sortKey];
+      let vb = b[sortKey];
+      if (sortKey === "version") {
+        va = Number(va) || 0;
+        vb = Number(vb) || 0;
+      } else if (sortKey === "valid_from") {
+        va = va || "";
+        vb = vb || "";
+      } else {
+        va = (va || "").toString().toLowerCase();
+        vb = (vb || "").toString().toLowerCase();
+      }
+      if (va < vb) return sortDir === "asc" ? -1 : 1;
+      if (va > vb) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  }
+
+  function updateSortIndicators() {
+    sortableHeaders.forEach((th) => {
+      if (th.dataset.sort === sortKey) {
+        th.dataset.sortDir = sortDir;
+        th.querySelector(".sort-arrow").textContent = sortDir === "asc" ? "↑" : "↓";
+      } else {
+        th.removeAttribute("data-sort-dir");
+        th.querySelector(".sort-arrow").textContent = "↕";
+      }
+    });
+  }
+
   async function load() {
-    // Judul & bidang difilter di server (endpoint sudah mendukungnya);
-    // No. Dokumen, Versi, dan Berlaku Mulai difilter di sisi klien karena
-    // datanya kecil dan supaya pencarian per-kolom bisa langsung terasa.
     const params = new URLSearchParams();
     if (searchEl.value) params.set("q", searchEl.value);
     if (bidangEl.value) params.set("bidang", bidangEl.value);
 
-    let list = await api(`/sop/published?${params.toString()}`);
+    const list = await api(`/sop/published?${params.toString()}`);
+    const sorted = applySort(list);
+    updateSortIndicators();
 
-    const doc = docEl.value.trim().toLowerCase();
-    const version = versionEl.value.trim().toLowerCase();
-    const date = dateEl.value.trim().toLowerCase();
-    if (doc) list = list.filter((s) => (s.doc_number || "").toLowerCase().includes(doc));
-    if (version) list = list.filter((s) => String(s.version).toLowerCase().includes(version));
-    if (date) list = list.filter((s) => fmtDate(s.valid_from).toLowerCase().includes(date));
-
-    subCount.textContent = `${list.length} SOP berlaku ditemukan`;
+    subCount.textContent = `${sorted.length} SOP berlaku ditemukan`;
 
     rowsEl.innerHTML =
-      list
+      sorted
         .map(
           (s) => `
       <tr onclick="window.location.href='/sop-detail.html?id=${s.id}'">
@@ -53,7 +80,19 @@
         .join("") || `<tr><td colspan="5" class="empty-state">Belum ada SOP yang berlaku dan cocok dengan pencarian.</td></tr>`;
   }
 
-  [searchEl, docEl, versionEl, dateEl].forEach((el) => el.addEventListener("input", () => load()));
+  sortableHeaders.forEach((th) => {
+    th.addEventListener("click", () => {
+      if (sortKey === th.dataset.sort) {
+        sortDir = sortDir === "asc" ? "desc" : "asc";
+      } else {
+        sortKey = th.dataset.sort;
+        sortDir = "asc";
+      }
+      load();
+    });
+  });
+
+  searchEl.addEventListener("input", () => load());
   bidangEl.addEventListener("change", () => load());
   load();
 })();

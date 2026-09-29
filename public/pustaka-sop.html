@@ -18,16 +18,22 @@
       </div>
     </div>
 
+    <div style="display:flex;gap:12px">
+      <input id="search" type="text" placeholder="Cari judul SOP…" class="card" style="flex:1;border:1px solid var(--border);padding:10px 14px">
+      <select id="filter-bidang" class="card" style="border:1px solid var(--border);padding:10px 14px">
+        <option value="">Semua Bidang</option>
+      </select>
+    </div>
+
     <div class="card" style="padding:0;overflow:hidden">
       <table>
         <thead>
-          <tr><th>Judul SOP</th><th>Bidang</th><th>No. Dokumen</th><th>Versi</th><th>Berlaku Mulai</th></tr>
-          <tr class="filter-row">
-            <th><input id="search" type="text" placeholder="Cari judul…"></th>
-            <th><select id="filter-bidang"><option value="">Semua Bidang</option></select></th>
-            <th><input id="filter-doc" type="text" placeholder="Cari no. dokumen…"></th>
-            <th><input id="filter-version" type="text" placeholder="Cari versi…"></th>
-            <th><input id="filter-date" type="text" placeholder="Cari tanggal…"></th>
+          <tr>
+            <th class="sortable" data-sort="title">Judul SOP <span class="sort-arrow">↕</span></th>
+            <th class="sortable" data-sort="bidang">Bidang <span class="sort-arrow">↕</span></th>
+            <th class="sortable" data-sort="doc_number">No. Dokumen <span class="sort-arrow">↕</span></th>
+            <th class="sortable" data-sort="version">Versi <span class="sort-arrow">↕</span></th>
+            <th class="sortable" data-sort="valid_from">Berlaku Mulai <span class="sort-arrow">↕</span></th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
