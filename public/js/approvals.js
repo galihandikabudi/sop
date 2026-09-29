@@ -11,7 +11,16 @@
   const bodyEl = document.getElementById("body");
   const subCount = document.getElementById("sub-count");
 
-  const queue = await api("/sop?status=menunggu_persetujuan");
+  // Kepala Sekolah bisa langsung menyetujui/menolak SOP baik yang sudah
+  // di-ACC Waka ("menunggu_persetujuan") maupun yang belum sempat direview
+  // sama sekali ("menunggu_review") — gabungkan kedua antrean di sini, dan
+  // beri tanda "Belum diperiksa" pada item yang masih menunggu_review supaya
+  // Kepala Sekolah tahu sebelum mengesahkan.
+  const [reviewQueue, approvalQueue] = await Promise.all([
+    api("/sop?status=menunggu_review"),
+    api("/sop?status=menunggu_persetujuan"),
+  ]);
+  const queue = [...approvalQueue, ...reviewQueue].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
   subCount.textContent = `${queue.length} pengajuan SOP menunggu tinjauan Anda`;
 
   if (!queue.length) {
@@ -35,7 +44,13 @@
                 <div style="font-weight:700;font-size:15px">${s.title}</div>
                 <div style="font-size:12.5px;color:var(--muted);margin-top:3px">${s.bidang} · diajukan oleh ${s.created_by_name} · ${fmtDate(s.updated_at)}</div>
               </div>
-              ${s.id === selectedId ? `<span class="badge" style="background:var(--pending-bg);color:var(--pending-text)">Sedang ditinjau</span>` : ""}
+              ${
+                s.status === "menunggu_review"
+                  ? `<span class="badge" style="background:var(--danger-bg,#fdecea);color:var(--danger-text,#b3261e)">Belum diperiksa</span>`
+                  : s.id === selectedId
+                  ? `<span class="badge" style="background:var(--pending-bg);color:var(--pending-text)">Sedang ditinjau</span>`
+                  : ""
+              }
             </div>
           </div>`
           )
@@ -46,6 +61,13 @@
         <div>
           <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px">Tinjau Pengajuan</div>
           <div class="serif" style="font-size:18px;font-weight:600">${detail.title}</div>
+          ${
+            detail.status === "menunggu_review"
+              ? `<div style="margin-top:8px;padding:10px 12px;border-radius:8px;background:var(--danger-bg,#fdecea);color:var(--danger-text,#b3261e);font-size:12.5px;font-weight:600">
+                   ⚠️ SOP ini belum diperiksa/di-ACC oleh Waka atau Pemeriksa. Anda dapat tetap mengesahkannya langsung, tapi pastikan sudah membaca isinya.
+                 </div>`
+              : ""
+          }
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
           <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Bidang</span><span style="font-weight:600">${detail.bidang}</span></div>
@@ -79,6 +101,14 @@
 
     document.getElementById("approve-btn").addEventListener("click", async () => {
       const errorEl = document.getElementById("error");
+      if (
+        detail.status === "menunggu_review" &&
+        !window.confirm(
+          "SOP ini belum diperiksa/di-ACC oleh Waka atau Pemeriksa. Anda akan mengesahkannya langsung tanpa proses review tersebut. Lanjutkan?"
+        )
+      ) {
+        return;
+      }
       try {
         await api(`/sop/${selectedId}/approve`, {
           method: "POST",

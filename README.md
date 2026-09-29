@@ -510,6 +510,46 @@ Baru: `functions/api/users/directory.js`, `migrations/008_checker_user_id.sql`
 Berubah: `schema.sql`, `functions/api/sop/index.js`, `functions/api/sop/[id].js`,
 `public/sop-new.html`, `public/js/sop-detail.js`, `public/js/waka-review.js`
 
+## Pembaruan: Diskusi Terbuka untuk Semua Akun + Bisa Dihapus, Halaman Publik Daftar SOP
+
+Dua perbaikan sekaligus:
+
+**1. Kolom Diskusi/Komentar**
+
+- **Akses dibuka untuk semua orang yang punya akun**, bukan cuma bidang
+  yang sama — mengikuti aturan yang sama seperti melihat halaman detail
+  SOP itu sendiri: SOP yang sudah **"Berlaku"** boleh didiskusikan siapa
+  saja yang login (lintas bidang), sedangkan draft/pengajuan yang belum
+  berlaku tetap terbatas ke bidang sendiri/pemeriksa yang ditunjuk/Kepala
+  Sekolah seperti biasa, supaya diskusi internal yang belum publik tidak
+  bocor ke bidang lain.
+- Keterangan **waktu komentar ditulis** sudah tampil di setiap komentar
+  (tanggal & jam) — ini sebenarnya sudah ada sebelumnya, tidak berubah.
+- **Opsi Hapus** komentar sekarang tersedia — hanya untuk **penulis
+  komentar itu sendiri, atau Kepala Sekolah**.
+
+**2. Halaman Publik Daftar SOP Berlaku**
+
+Halaman baru **tanpa perlu login**, menampilkan semua SOP yang sedang
+berlaku, lengkap dengan **pencarian judul** dan **filter Bidang** — bisa
+dibagikan ke siapa saja (wali murid, mitra sekolah, dsb.), bukan cuma
+staf yang punya akun.
+
+Alamatnya: **`sop-muhada.pages.dev/list`** (Cloudflare Pages otomatis
+melayani `list.html` di alamat bersih `/list`; kalau karena suatu hal
+alamat pendek itu tidak langsung aktif, `sop-muhada.pages.dev/list.html`
+selalu berfungsi sebagai cadangan).
+
+Klik satu baris membuka halaman dokumen publik yang sudah ada sebelumnya
+(`sop-public.html`, dipakai juga oleh QR code di dokumen cetak) — jadi
+tidak ada endpoint atau tampilan dokumen baru yang perlu dibuat.
+
+### Berkas yang baru/berubah pada pembaruan ini
+
+Baru: `functions/api/sop/[id]/comments/[commentId].js`, `functions/api/public/sop/index.js`, `public/list.html`
+
+Berubah: `functions/api/sop/[id]/comments.js`, `public/js/sop-detail.js`
+
 ## Pembaruan: Ajukan Perubahan untuk SOP yang Sudah Berlaku
 
 Sebelumnya, SOP berstatus **"Berlaku"** tidak bisa diedit lagi lewat
@@ -675,6 +715,42 @@ Kalau yang mengajukan SOP adalah seorang **Waka**, dua aturan baru berlaku:
 `functions/api/sop/index.js`, `functions/api/sop/[id]/submit.js`,
 `functions/api/sop/[id]/waka-approve.js`, `functions/api/sop/[id]/waka-reject.js`,
 `public/sop-new.html`, `public/js/sop-detail.js`
+
+## Pembaruan: Kepala Sekolah Bisa Langsung Mengesahkan Tanpa Menunggu Review
+
+Sebelumnya, sebuah pengajuan SOP harus melalui tahap **Tinjauan Waka**
+(status `menunggu_review`) lebih dulu sebelum sampai ke antrean
+**Persetujuan** Kepala Sekolah (status `menunggu_persetujuan`). Sekarang
+Kepala Sekolah bisa memilih untuk **langsung mengesahkan atau menolak**
+sebuah pengajuan meski belum sempat di-ACC oleh Waka/Pemeriksa — berguna
+untuk kasus mendesak atau ketika Waka terkait sedang tidak tersedia.
+
+Yang berubah di halaman **Persetujuan**:
+
+- Antrean sekarang menggabungkan **kedua status** — pengajuan yang sudah
+  di-ACC Waka (`menunggu_persetujuan`) dan yang belum sama sekali
+  (`menunggu_review`) — jadi semuanya bisa langsung dikelola dari satu
+  tempat oleh Kepala Sekolah.
+- Pengajuan yang **belum diperiksa** ditandai dengan label merah "Belum
+  diperiksa" di daftar, dan sebuah kotak peringatan muncul di panel detail
+  saat pengajuan itu dipilih.
+- Saat tombol **"Setujui & Sahkan"** ditekan untuk pengajuan yang belum
+  diperiksa, muncul dialog konfirmasi yang menegaskan bahwa proses review
+  Waka/Pemeriksa akan dilewati — Kepala Sekolah harus menekan "OK" secara
+  sadar sebelum pengesahan diproses.
+- Badge jumlah pengajuan menunggu di sidebar (menu "Persetujuan") sekarang
+  menjumlahkan kedua status ini, bukan cuma `menunggu_persetujuan`.
+- Riwayat versi SOP dan Log Aktivitas mencatat secara eksplisit ketika
+  pengesahan atau penolakan dilakukan **tanpa melalui review Waka/Pemeriksa**,
+  supaya jejak auditnya tetap jelas.
+
+Tidak ada perubahan skema database untuk fitur ini — murni penyesuaian
+aturan status di sisi server dan tampilan di sisi Kepala Sekolah.
+
+### Berkas yang berubah pada pembaruan ini
+
+`functions/api/sop/[id]/approve.js`, `functions/api/sop/[id]/reject.js`,
+`public/js/approvals.js`, `public/js/sidebar.js`
 
 ## Fitur lain
 

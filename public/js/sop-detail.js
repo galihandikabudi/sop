@@ -372,17 +372,35 @@
 
     listEl.innerHTML =
       comments
-        .map(
-          (c) => `
+        .map((c) => {
+          const canDeleteComment = c.user_id === user.id || user.role === "kepala_sekolah";
+          return `
       <div class="comment-item">
         <div class="comment-avatar">${initials(c.author_name)}</div>
         <div class="comment-body">
-          <div class="comment-meta"><strong>${c.author_name}</strong> · ${fmtDateTime(c.created_at)}</div>
+          <div class="comment-meta" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <span><strong>${c.author_name}</strong> · ${fmtDateTime(c.created_at)}</span>
+            ${canDeleteComment ? `<button type="button" class="comment-delete-btn" data-comment-id="${c.id}" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:0">Hapus</button>` : ""}
+          </div>
           <div>${c.comment.replace(/</g, "&lt;")}</div>
         </div>
-      </div>`
-        )
+      </div>`;
+        })
         .join("") || `<div class="empty-state" style="padding:12px 0">Belum ada komentar.</div>`;
+
+    listEl.querySelectorAll("[data-comment-id]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (!confirm("Hapus komentar ini?")) return;
+        btn.disabled = true;
+        try {
+          await api(`/sop/${id}/comments/${btn.dataset.commentId}`, { method: "DELETE" });
+          await loadComments();
+        } catch (err) {
+          alert(err.message);
+          btn.disabled = false;
+        }
+      });
+    });
   }
 
   render();

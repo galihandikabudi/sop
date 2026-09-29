@@ -1,4 +1,9 @@
 // POST /api/sop/:id/reject  { note } — Kepala Sekolah only; sends SOP back to draft
+//
+// Bisa dipakai baik dari status "menunggu_review" maupun "menunggu_persetujuan"
+// — Kepala Sekolah boleh langsung menolak/mengembalikan SOP ke draft meski
+// belum sempat di-ACC Waka/Pemeriksa (pasangan dari kemudahan yang sama di
+// approve.js).
 import { getSessionUser, json, unauthorized, forbidden } from "../../../../lib/auth.js";
 import { logActivity } from "../../../../lib/log.js";
 
@@ -9,8 +14,8 @@ export async function onRequestPost({ request, env, params }) {
 
   const sop = await env.DB.prepare("SELECT * FROM sop WHERE id = ?").bind(params.id).first();
   if (!sop) return json({ error: "SOP tidak ditemukan." }, 404);
-  if (sop.status !== "menunggu_persetujuan") {
-    return json({ error: "SOP ini tidak sedang menunggu persetujuan." }, 400);
+  if (sop.status !== "menunggu_persetujuan" && sop.status !== "menunggu_review") {
+    return json({ error: "SOP ini tidak sedang menunggu review atau persetujuan." }, 400);
   }
 
   const { note } = await request.json().catch(() => ({}));

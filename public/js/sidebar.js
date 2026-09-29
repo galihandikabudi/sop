@@ -10,8 +10,16 @@ async function renderSidebar() {
   let pendingCount = "";
   if (user.role === "kepala_sekolah") {
     try {
-      const list = await api("/sop?status=menunggu_persetujuan");
-      if (list.length) pendingCount = `<span class="badge-count">${list.length}</span>`;
+      // Kepala Sekolah bisa langsung bertindak baik pada SOP yang sudah
+      // di-ACC Waka ("menunggu_persetujuan") maupun yang belum sempat
+      // direview sama sekali ("menunggu_review"), jadi keduanya dihitung
+      // di badge halaman Persetujuan.
+      const [review, approval] = await Promise.all([
+        api("/sop?status=menunggu_review"),
+        api("/sop?status=menunggu_persetujuan"),
+      ]);
+      const total = review.length + approval.length;
+      if (total) pendingCount = `<span class="badge-count">${total}</span>`;
     } catch {}
   }
 

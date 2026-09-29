@@ -3,20 +3,30 @@
 import { getSessionUser, json, unauthorized, forbidden } from "../../../../lib/auth.js";
 import { logActivity } from "../../../../lib/log.js";
 
-async function canAccess(env, user, sop) {
-  return user.role === "kepala_sekolah" || sop.bidang === user.bidang;
+// Diskusi mengikuti aturan lihat yang sama dengan halaman detail SOP itu
+// sendiri (lihat isPublished di functions/api/sop/[id].js): SOP yang sudah
+// "berlaku" adalah dokumen resmi terbuka untuk SEMUA pengguna yang login,
+// jadi kolom diskusinya pun ikut terbuka untuk semua orang yang punya akun
+// — bukan cuma bidang sendiri. Draft/pengajuan yang belum berlaku tetap
+// dibatasi seperti biasa (bidang sendiri, pemeriksa yang ditunjuk, atau
+// Kepala Sekolah) supaya diskusi internal yang belum publik tidak bocor.
+function canAccess(user, sop) {
+  if (user.role === "kepala_sekolah") return true;
+  if (sop.status === "berlaku") return true;
+  const isNamedChecker = user.role === "waka" && sop.checker_user_id === user.id;
+  return sop.bidang === user.bidang || isNamedChecker;
 }
 
 export async function onRequestGet({ request, env, params }) {
   const user = await getSessionUser(request, env);
   if (!user) return unauthorized();
 
-  const sop = await env.DB.prepare("SELECT id, bidang FROM sop WHERE id = ?").bind(params.id).first();
+  const sop = await env.DB.prepare("SELECT id, bidang, status, checker_user_id FROM sop WHERE id = ?").bind(params.id).first();
   if (!sop) return json({ error: "SOP tidak ditemukan." }, 404);
-  if (!(await canAccess(env, user, sop))) return forbidden();
+  if (!canAccess(user, sop)) return forbidden();
 
   const { results } = await env.DB.prepare(
-    `SELECT c.id, c.comment, c.created_at, u.name AS author_name
+    `SELECT c.id, c.comment, c.created_at, c.user_id, u.name AS author_name
      FROM sop_comments c JOIN users u ON u.id = c.user_id
      WHERE c.sop_id = ? ORDER BY c.created_at ASC`
   ).bind(sop.id).all();
@@ -28,9 +38,9 @@ export async function onRequestPost({ request, env, params }) {
   const user = await getSessionUser(request, env);
   if (!user) return unauthorized();
 
-  const sop = await env.DB.prepare("SELECT id, bidang, title FROM sop WHERE id = ?").bind(params.id).first();
+  const sop = await env.DB.prepare("SELECT id, bidang, title, status, checker_user_id FROM sop WHERE id = ?").bind(params.id).first();
   if (!sop) return json({ error: "SOP tidak ditemukan." }, 404);
-  if (!(await canAccess(env, user, sop))) return forbidden();
+  if (!canAccess(user, sop)) return forbidden();
 
   const { comment } = await request.json().catch(() => ({}));
   if (!comment || !comment.trim()) return json({ error: "Komentar tidak boleh kosong." }, 400);

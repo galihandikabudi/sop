@@ -7,6 +7,13 @@
 // Nomor dokumen resmi (`doc_number`) dibuat sekali saja, pada pengesahan
 // PERTAMA — revisi berikutnya (naik versi) tidak mengubah nomor ini, hanya
 // versinya yang bertambah.
+//
+// Kepala Sekolah bisa mengesahkan langsung dari status "menunggu_review"
+// (belum sempat di-ACC Waka/Pemeriksa), bukan cuma dari "menunggu_persetujuan"
+// — melewati tahap review Waka. Peringatan soal ini ditampilkan di sisi
+// aplikasi (halaman Antrean Persetujuan) sebelum tombol disahkan ditekan;
+// di sini catatan riwayatnya juga otomatis disesuaikan supaya jejak audit
+// tetap jelas bahwa tahap review dilewati.
 import { getSessionUser, json, unauthorized, forbidden } from "../../../../lib/auth.js";
 import { logActivity } from "../../../../lib/log.js";
 import { generateDocNumber } from "../../../../lib/docNumber.js";
@@ -23,8 +30,9 @@ export async function onRequestPost({ request, env, params }) {
 
   const sop = await env.DB.prepare("SELECT * FROM sop WHERE id = ?").bind(params.id).first();
   if (!sop) return json({ error: "SOP tidak ditemukan." }, 404);
-  if (sop.status !== "menunggu_persetujuan") {
-    return json({ error: "SOP ini tidak sedang menunggu persetujuan." }, 400);
+  const skippedReview = sop.status === "menunggu_review";
+  if (!skippedReview && sop.status !== "menunggu_persetujuan") {
+    return json({ error: "SOP ini tidak sedang menunggu review atau persetujuan." }, 400);
   }
 
   const body = await request.json().catch(() => ({}));
@@ -42,10 +50,14 @@ export async function onRequestPost({ request, env, params }) {
      WHERE id = ?`
   ).bind(newVersion, validFrom, docNumber, sop.id).run();
 
+  const defaultNote = skippedReview
+    ? "Disahkan langsung oleh Kepala Sekolah tanpa melalui review Waka/Pemeriksa"
+    : "Disahkan";
+
   await env.DB.prepare(
     `INSERT INTO sop_versions (sop_id, version, content, status, note, actor_id)
      VALUES (?, ?, ?, 'berlaku', ?, ?)`
-  ).bind(sop.id, newVersion, sop.content, body.note || "Disahkan", user.id).run();
+  ).bind(sop.id, newVersion, sop.content, body.note || defaultNote, user.id).run();
 
   await logActivity(env, {
     actorId: user.id,
@@ -53,8 +65,8 @@ export async function onRequestPost({ request, env, params }) {
     action: "approve",
     entityType: "sop",
     entityId: sop.id,
-    detail: `Mengesahkan "${sop.title}" (${docNumber}, v${newVersion}, berlaku mulai ${validFrom})`,
+    detail: `Mengesahkan "${sop.title}" (${docNumber}, v${newVersion}, berlaku mulai ${validFrom})${skippedReview ? " — tanpa review Waka/Pemeriksa" : ""}`,
   });
 
-  return json({ ok: true, version: newVersion, valid_from: validFrom, doc_number: docNumber });
+  return json({ ok: true, version: newVersion, valid_from: validFrom, doc_number: docNumber, skippedReview });
 }

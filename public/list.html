@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daftar SOP Berlaku — SMK Muhada</title>
+<meta name="description" content="Daftar SOP resmi SMK Muhammadiyah Todanan yang sedang berlaku, terbuka untuk umum.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+  /* Halaman ini publik (tanpa login) — satu kolom di tengah layar, tidak
+     memakai .layout/.sidebar seperti sop-public.html. */
+  body { background: var(--bg); }
+  .public-wrap { max-width: 880px; margin: 0 auto; padding: 32px 20px 60px; }
+</style>
+</head>
+<body>
+<div class="public-wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+    <div style="font-family:'Montserrat',sans-serif;font-weight:800;color:var(--biru-tua)">SOP Muhada</div>
+    <div style="font-size:12px;color:var(--muted)">SMK Muhammadiyah Todanan</div>
+  </div>
+
+  <h1 class="serif" style="font-size:24px;margin:0 0 6px">Daftar SOP Berlaku</h1>
+  <div style="color:var(--muted);font-size:13.5px;margin-bottom:20px" id="sub-count">Memuat daftar SOP…</div>
+
+  <div style="display:flex;gap:12px;margin-bottom:16px">
+    <input id="search" type="text" placeholder="Cari judul SOP…" class="card" style="flex:1;border:1px solid var(--border);padding:10px 14px">
+    <select id="filter-bidang" class="card" style="border:1px solid var(--border);padding:10px 14px">
+      <option value="">Semua Bidang</option>
+    </select>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden">
+    <table>
+      <thead>
+        <tr><th>Judul SOP</th><th>Bidang</th><th>No. Dokumen</th><th>Versi</th><th>Berlaku Mulai</th></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <div style="font-size:12px;color:var(--muted);margin-top:16px;text-align:center">
+    Halaman ini terbuka untuk umum dan hanya menampilkan SOP yang sudah resmi disahkan.
+  </div>
+</div>
+
+<script>
+(async function () {
+  function fmtDate(iso) {
+    if (!iso) return "—";
+    return new Date(iso).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+  }
+
+  const rowsEl = document.getElementById("rows");
+  const subCount = document.getElementById("sub-count");
+  const searchEl = document.getElementById("search");
+  const bidangEl = document.getElementById("filter-bidang");
+
+  let allSops = [];
+
+  try {
+    const res = await fetch("/api/public/sop");
+    allSops = await res.json().catch(() => []);
+    if (!res.ok) throw new Error("Gagal memuat daftar SOP.");
+  } catch (err) {
+    subCount.textContent = err.message || "Gagal memuat daftar SOP.";
+    return;
+  }
+
+  const bidangNames = [...new Set(allSops.map((s) => s.bidang))].sort();
+  bidangEl.innerHTML += bidangNames.map((b) => `<option value="${b}">${b}</option>`).join("");
+
+  function render() {
+    const q = searchEl.value.trim().toLowerCase();
+    const bidang = bidangEl.value;
+    const filtered = allSops.filter(
+      (s) => (!q || s.title.toLowerCase().includes(q)) && (!bidang || s.bidang === bidang)
+    );
+
+    subCount.textContent = `${filtered.length} SOP berlaku ditemukan`;
+
+    rowsEl.innerHTML =
+      filtered
+        .map(
+          (s) => `
+      <tr onclick="window.location.href='/sop-public.html?id=${s.id}'">
+        <td style="font-weight:600">${s.title}</td>
+        <td style="color:var(--muted)">${s.bidang}</td>
+        <td style="color:var(--muted)">${s.doc_number || "—"}</td>
+        <td style="color:var(--muted)">v${s.version}</td>
+        <td style="color:var(--muted)">${fmtDate(s.valid_from)}</td>
+      </tr>`
+        )
+        .join("") || `<tr><td colspan="5" class="empty-state">Belum ada SOP yang berlaku dan cocok dengan pencarian.</td></tr>`;
+  }
+
+  searchEl.addEventListener("input", render);
+  bidangEl.addEventListener("change", render);
+  render();
+})();
+</script>
+</body>
+</html>
