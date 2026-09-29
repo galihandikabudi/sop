@@ -510,6 +510,48 @@ Baru: `functions/api/users/directory.js`, `migrations/008_checker_user_id.sql`
 Berubah: `schema.sql`, `functions/api/sop/index.js`, `functions/api/sop/[id].js`,
 `public/sop-new.html`, `public/js/sop-detail.js`, `public/js/waka-review.js`
 
+## Pembaruan: Ajukan Perubahan untuk SOP yang Sudah Berlaku
+
+Sebelumnya, SOP berstatus **"Berlaku"** tidak bisa diedit lagi lewat
+aplikasi — satu-satunya jalan merevisinya adalah membuat SOP baru dari
+awal. Sekarang ada tombol **"Ajukan Perubahan"** di halaman detail SOP,
+muncul untuk SOP yang **Berlaku**, untuk **pembuat SOP tersebut atau
+Kepala Sekolah**.
+
+Klik tombol ini akan:
+
+1. Membuka lagi dokumen itu sebagai **draf** yang bisa diedit (isi,
+   Nama Penyusun, Nama Pemeriksa) — pakai tampilan edit yang sama
+   seperti draf baru.
+2. Draf revisi ini lalu diajukan dan ditinjau lagi lewat **alur yang
+   sama persis** seperti pengajuan SOP baru (Tinjauan Waka → Persetujuan
+   Kepala Sekolah).
+3. Begitu disahkan lagi, **nomor dokumen resminya tetap sama** — cuma
+   nomor **versinya yang naik** (mis. dari v1.0 jadi v2.0). Ini
+   memanfaatkan aturan yang sebelumnya sudah ada di `approve.js`: nomor
+   dokumen memang hanya dibuat sekali, saat pertama kali disahkan.
+
+**Catatan penting:** selama proses revisi berjalan (draf/menunggu
+review/menunggu persetujuan), dokumen ini **untuk sementara tidak
+muncul di Pustaka SOP** (yang hanya menampilkan status "Berlaku") —
+sama seperti saat sebuah SOP ditolak dan kembali ke draft. Begitu
+revisinya disahkan lagi, dokumen otomatis muncul kembali.
+
+Untuk mencegah kecelakaan (draf revisi yang punya riwayat pernah
+disahkan tidak sengaja terhapus total lewat tombol "Hapus" yang jadi
+aktif lagi karena statusnya balik ke "draft"), tombol **"Hapus"
+sekarang tidak lagi tersedia untuk pemilik sendiri** pada dokumen yang
+pernah disahkan (punya nomor dokumen) — hanya Kepala Sekolah yang bisa
+menghapusnya kalau benar-benar diperlukan. Draf yang memang benar-benar
+baru (belum pernah disahkan sama sekali) tetap bisa dihapus pemiliknya
+seperti biasa.
+
+### Berkas yang baru/berubah pada pembaruan ini
+
+Baru: `functions/api/sop/[id]/propose-change.js`
+
+Berubah: `functions/api/sop/[id]/delete.js`, `public/js/sop-detail.js`
+
 ## Pembaruan: Sebutan Jabatan Kustom untuk Bidang (Bukan Selalu "Waka")
 
 Beberapa bidang punya pemegang jabatan yang bukan "Waka" secara harfiah —

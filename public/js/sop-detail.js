@@ -213,7 +213,15 @@
     }
 
     // Actions
-    const canDelete = user.role === "kepala_sekolah" || (sop.created_by === user.id && sop.status === "draft");
+    // Sebuah SOP yang pernah disahkan (doc_number sudah terisi) tidak boleh
+    // dihapus sendiri oleh pemiliknya lagi walau statusnya balik ke "draft"
+    // gara-gara "Ajukan Perubahan" di bawah — supaya draf revisi yang
+    // sedang berjalan tidak bisa "dihapus" dan mengenyahkan seluruh riwayat
+    // persetujuan sebelumnya secara tidak sengaja. Kepala Sekolah tetap
+    // bisa menghapusnya kalau memang perlu.
+    const hasPriorApproval = !!sop.doc_number;
+    const canDelete =
+      user.role === "kepala_sekolah" || (sop.created_by === user.id && sop.status === "draft" && !hasPriorApproval);
     // Seorang Waka tidak pernah perlu meninjau pengajuannya sendiri, walau
     // bidangnya cocok — tombol tinjau hanya muncul untuk Waka lain, atau
     // Waka yang namanya tercatat sebagai Pemeriksa.
@@ -226,6 +234,9 @@
     if (isDraft && isOwnerOrAdmin) {
       actionsHtml += `<button class="btn btn-primary" id="submit-btn">Ajukan Persetujuan</button>`;
     }
+    if (isBerlaku && isOwnerOrAdmin) {
+      actionsHtml += `<button class="btn btn-secondary" id="propose-change-btn">Ajukan Perubahan</button>`;
+    }
     if (sop.status === "menunggu_review" && isWakaReviewer) {
       actionsHtml += `<a href="/waka-review.html" class="btn btn-primary">Tinjau di Tinjauan Waka</a>`;
     }
@@ -236,6 +247,27 @@
       actionsHtml += `<button class="btn btn-danger" id="delete-btn">Hapus</button>`;
     }
     actions.innerHTML = actionsHtml;
+
+    const proposeChangeBtn = document.getElementById("propose-change-btn");
+    if (proposeChangeBtn) {
+      proposeChangeBtn.addEventListener("click", async () => {
+        if (
+          !confirm(
+            `Ajukan perubahan untuk "${sop.title}"?\n\nSOP ini akan dibuka lagi sebagai draf untuk diedit, lalu perlu diajukan dan disetujui ulang (lewat alur yang sama seperti pengajuan baru) sebelum berlaku kembali. Selama proses ini, SOP tidak akan muncul di Pustaka SOP. Nomor dokumen tetap sama, hanya versinya yang akan naik setelah disahkan lagi.`
+          )
+        ) {
+          return;
+        }
+        proposeChangeBtn.disabled = true;
+        try {
+          await api(`/sop/${id}/propose-change`, { method: "POST" });
+          window.location.reload();
+        } catch (err) {
+          alert(err.message);
+          proposeChangeBtn.disabled = false;
+        }
+      });
+    }
 
     const deleteBtn = document.getElementById("delete-btn");
     if (deleteBtn) {
